@@ -12,20 +12,22 @@
             <label class="form-label">課程描述</label>
             <textarea class="form-control" v-model="course.description" rows="3"></textarea>
           </div>
-          <div class="form-group">
-            <label class="form-label">課程分類</label>
-            <select class="form-control" v-model="course.category" required>
-              <option disabled value="">請選擇分類</option>
-              <option>教育訓練</option>
-              <option>商品教育</option>
-            </select>
-          </div>
-          <div class="form-group">
-            <label class="form-label">上架狀態</label>
-            <select class="form-control" v-model="course.published">
-              <option :value="true">已上架</option>
-              <option :value="false">草稿</option>
-            </select>
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">課程分類</label>
+              <select class="form-control" v-model="course.category" required>
+                <option disabled value="">請選擇分類</option>
+                <option>教育訓練</option>
+                <option>商品教育</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label">上架狀態</label>
+              <select class="form-control" v-model="course.published">
+                <option :value="true">已上架</option>
+                <option :value="false">草稿</option>
+              </select>
+            </div>
           </div>
         </div>
       </div>
@@ -70,8 +72,8 @@
       </div>
 
       <div class="form-actions">
+        <button type="button" class="btn btn--outline" @click="$router.push({ name: 'admin-courses' })">取消</button>
         <button type="submit" class="btn btn--primary">儲存課程</button>
-        <button type="button" class="btn btn--outline" @click="$router.push({ name: 'admin-courses' })" style="margin-left: 16px;">取消</button>
       </div>
     </form>
   </div>
@@ -79,21 +81,13 @@
 
 <script setup>
 import { ref, onMounted, computed, watch } from 'vue';
-import { useRoute, useRouter, onBeforeRouteLeave } from 'vue-router';
+import { useRoute, useRouter } from 'vue-router';
 import { useCourseStore } from '@/stores/course';
-import { useUiStore } from '@/stores/ui';
 import draggable from 'vuedraggable';
 
 const route = useRoute();
 const router = useRouter();
 const courseStore = useCourseStore();
-const uiStore = useUiStore();
-
-// Clear editing state when leaving the page
-onBeforeRouteLeave((to, from, next) => {
-  uiStore.clearAdminEditingState();
-  next();
-});
 
 const courseId = route.params.id;
 const isNewCourse = computed(() => courseId === 'new');
@@ -139,11 +133,10 @@ const onLessonDragEnd = async () => {
 
 // Lesson Management Actions
 const addLesson = () => {
-  uiStore.openLessonEditorModal(courseId);
+  router.push({ name: 'admin-lesson-new', params: { courseId } });
 };
 const editLesson = (lessonId) => {
-  const lessonToEdit = lessons.value.find(l => l.id === lessonId);
-  uiStore.openLessonEditorModal(courseId, lessonToEdit);
+  router.push({ name: 'admin-lesson-edit', params: { courseId, lessonId } });
 };
 const deleteLesson = async (lessonId) => {
   if (confirm('您確定要刪除這個單元嗎？')) {
@@ -157,17 +150,17 @@ const deleteLesson = async (lessonId) => {
 
 // Quiz Management Actions
 const editQuiz = () => {
-  uiStore.openQuizEditorModal(courseId, quiz.value);
+  router.push({ name: 'admin-quiz-edit', params: { courseId } });
 };
 </script>
 
 <style scoped>
-/* ... existing styles ... */
 .drag-handle {
   cursor: grab;
   margin-right: 16px;
   font-size: 1.2em;
 }
+
 .lesson-item {
   display: flex;
   align-items: center;
@@ -177,7 +170,31 @@ const editQuiz = () => {
   margin-bottom: 8px;
   background-color: var(--color-surface);
 }
+
 .lesson-item > span {
   flex-grow: 1;
+}
+
+.lesson-actions {
+  display: flex;
+  gap: var(--space-8);
+}
+
+.form-actions {
+  margin-top: var(--space-32);
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--space-16);
+}
+
+.form-row {
+  display: flex;
+  gap: var(--space-24);
+  margin-bottom: var(--space-24);
+}
+
+.form-row .form-group {
+  flex: 1;
+  margin-bottom: 0;
 }
 </style>

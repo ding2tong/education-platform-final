@@ -92,7 +92,7 @@ const isLessonCompleted = (courseId, lessonId) => {
 }
 .progress-item-card {
   background-color: var(--color-surface);
-  border-radius: var(--radius-md);
+  border-radius: var(--radius-base);
   border: 1px solid var(--color-card-border);
   transition: box-shadow 0.2s ease;
 }
@@ -133,7 +133,10 @@ const isLessonCompleted = (courseId, lessonId) => {
   color: var(--color-success);
 }
 .score-badge--secondary {
-  background-color: var(--color-secondary);
+  background-color: rgba(173, 168, 182, 0.5);
   color: var(--color-text);
+  border-radius: var(--radius-sm);
+  padding-left: var(--space-8);
+  padding-right: var(--space-8);
 }
 </style>

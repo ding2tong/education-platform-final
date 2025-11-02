@@ -60,12 +60,4 @@ const updateProfile = async () => {
 };
 </script>
 
-<style scoped>
-/* The modal should not be closable by clicking the background */
-.modal.active {
-  pointer-events: auto;
-}
-.modal-content {
-  pointer-events: auto;
-}
-</style>
+

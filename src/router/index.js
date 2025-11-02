@@ -33,7 +33,7 @@ const router = createRouter({
           path: 'admin',
           component: () => import('../views/AdminView.vue'),
           children: [
-            { path: '', redirect: '/admin/students' },
+            { path: '', redirect: '/admin/dashboard' },
             {
               path: 'students',
               name: 'admin-students',
@@ -53,6 +53,36 @@ const router = createRouter({
               path: 'dashboard',
               name: 'admin-dashboard',
               component: () => import('../views/admin/DashboardAdminView.vue')
+            },
+            {
+              path: 'courses/:courseId/lessons/new',
+              name: 'admin-lesson-new',
+              component: () => import('../views/admin/LessonEditView.vue')
+            },
+            {
+              path: 'courses/:courseId/lessons/:lessonId/edit',
+              name: 'admin-lesson-edit',
+              component: () => import('../views/admin/LessonEditView.vue')
+            },
+            {
+              path: 'courses/:courseId/quiz/edit',
+              name: 'admin-quiz-edit',
+              component: () => import('../views/admin/QuizEditView.vue')
+            },
+            {
+              path: 'courses/:courseId/lessons/new',
+              name: 'admin-lesson-new',
+              component: () => import('../views/admin/LessonEditView.vue')
+            },
+            {
+              path: 'courses/:courseId/lessons/:lessonId/edit',
+              name: 'admin-lesson-edit',
+              component: () => import('../views/admin/LessonEditView.vue')
+            },
+            {
+              path: 'courses/:courseId/quiz/edit',
+              name: 'admin-quiz-edit',
+              component: () => import('../views/admin/QuizEditView.vue')
             }
           ]
         },

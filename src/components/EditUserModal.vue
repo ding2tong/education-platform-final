@@ -71,12 +71,3 @@ const updateProfile = async () => {
   }
 };
 </script>
-
-<style scoped>
-.modal.active {
-  pointer-events: auto;
-}
-.modal-content {
-  pointer-events: auto;
-}
-</style>
