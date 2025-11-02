@@ -56,4 +56,14 @@ const viewCourse = (courseId) => {
   border-bottom: 2px solid var(--color-border);
   padding-bottom: 8px;
 }
+
+.course-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 24px;
+}
+
+h1 {
+  color: var(--color-text);
+}
 </style>

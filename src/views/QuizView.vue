@@ -13,7 +13,7 @@
             :class="{ selected: quizAnswers[question.id] === optIndex }"
             @click="selectAnswer(question.id, optIndex)"
           >
-            {{ option }}
+            {{ getOptionLabel(optIndex) }}. {{ option }}
           </div>
         </div>
       </div>
@@ -62,9 +62,47 @@ const selectAnswer = (questionId, optionIndex) => {
   quizAnswers.value[questionId] = optionIndex;
 };
 
+const getOptionLabel = (index) => {
+  return String.fromCharCode(97 + index);
+};
+
 const submitQuiz = async () => {
   if (!quiz.value) return;
   await authStore.submitQuiz(courseId, quiz.value.id, quizAnswers.value, lessonId);
   router.push({ name: 'quiz-result', params: { courseId: courseId }, query: { lessonId: lessonId } });
 };
 </script>
+
+<style scoped>
+.back-btn {
+  margin-bottom: var(--space-16);
+}
+
+.quiz-question {
+  margin-bottom: var(--space-24);
+}
+
+.quiz-options {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-8);
+}
+
+.quiz-option {
+  padding: var(--space-12);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-base);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.quiz-option:hover {
+  background-color: var(--color-secondary);
+}
+
+.quiz-option.selected {
+  background-color: var(--color-primary);
+  color: var(--color-btn-primary-text);
+  border-color: var(--color-primary);
+}
+</style>

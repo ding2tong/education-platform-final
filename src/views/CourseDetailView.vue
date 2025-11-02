@@ -41,3 +41,9 @@ const viewLesson = (lessonId) => {
   router.push({ name: 'lesson', params: { courseId: courseId, lessonId: lessonId } });
 };
 </script>
+
+<style scoped>
+.back-btn {
+  margin-bottom: var(--space-16);
+}
+</style>

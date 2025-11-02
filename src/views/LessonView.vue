@@ -76,3 +76,15 @@ const startQuiz = (isLessonQuiz) => {
   router.push({ name: 'quiz', params: params, query: query });
 };
 </script>
+
+<style scoped>
+.back-btn {
+  margin-bottom: var(--space-16);
+}
+
+.section-actions {
+  display: flex;
+  gap: var(--space-16);
+  margin-top: var(--space-32);
+}
+</style>

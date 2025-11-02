@@ -7,7 +7,7 @@
   --color-text: #23022e;
   --color-text-secondary: #ada8b6;
   --color-border: rgba(35, 2, 46, 0.2);
-  --color-card-border: rgba(35, 2, 46, 0.15);
+  --color-card-border: rgba(35, 2, 46, 0.3);
   --color-btn-primary-text: #ffffff;
   --color-secondary: rgba(173, 168, 182, 0.2);
   --color-secondary-hover: rgba(173, 168, 182, 0.3);
@@ -126,4 +126,15 @@ h4 { font-size: var(--font-size-lg); }
   padding: var(--space-4) var(--space-12);
   font-size: var(--font-size-sm);
   border-radius: var(--radius-sm);
+}
+
+.card {
+  background-color: var(--color-surface);
+  border-radius: var(--radius-base);
+  box-shadow: var(--shadow-sm);
+  border: 1px solid var(--color-card-border);
+}
+
+.card__body {
+  padding: var(--space-16);
 }
