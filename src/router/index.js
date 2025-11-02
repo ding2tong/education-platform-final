@@ -54,6 +54,7 @@ const router = createRouter({
               name: 'admin-dashboard',
               component: () => import('../views/admin/DashboardAdminView.vue')
             },
+
             {
               path: 'courses/:courseId/lessons/new',
               name: 'admin-lesson-new',
@@ -65,22 +66,7 @@ const router = createRouter({
               component: () => import('../views/admin/LessonEditView.vue')
             },
             {
-              path: 'courses/:courseId/quiz/edit',
-              name: 'admin-quiz-edit',
-              component: () => import('../views/admin/QuizEditView.vue')
-            },
-            {
-              path: 'courses/:courseId/lessons/new',
-              name: 'admin-lesson-new',
-              component: () => import('../views/admin/LessonEditView.vue')
-            },
-            {
-              path: 'courses/:courseId/lessons/:lessonId/edit',
-              name: 'admin-lesson-edit',
-              component: () => import('../views/admin/LessonEditView.vue')
-            },
-            {
-              path: 'courses/:courseId/quiz/edit',
+              path: 'courses/:courseId/quiz/edit/:lessonId?',
               name: 'admin-quiz-edit',
               component: () => import('../views/admin/QuizEditView.vue')
             }

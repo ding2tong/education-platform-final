@@ -84,9 +84,15 @@ onMounted(async () => {
     const lesson = courseStore.currentCourse?.lessons?.find(l => l.id === lessonId.value);
     if (lesson?.quiz) {
       quiz.value = { ...lesson.quiz };
+    } else {
+      // New unit quiz
+      quiz.value.title = `${lesson.title}_單元測驗`;
     }
   } else if (courseStore.currentCourse?.quiz) {
     quiz.value = { ...courseStore.currentCourse.quiz };
+  } else {
+    // New course quiz
+    quiz.value.title = `${courseStore.currentCourse.title}_課程測驗`;
   }
 });
 
