@@ -1,5 +1,5 @@
 <template>
-  <div class="page active">
+  <div class="page">
     <section class="hero">
       <div class="container">
         <h1>歡迎來到建祥教育訓練平台</h1>

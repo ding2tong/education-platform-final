@@ -93,3 +93,12 @@ const editLessonQuiz = () => {
   uiStore.openQuizEditorModal(uiStore.currentEditingCourseId, lesson.value.quiz, lesson.value.id);
 };
 </script>
+
+<style scoped>
+.modal.active {
+  pointer-events: auto;
+}
+.modal-content {
+  pointer-events: auto;
+}
+</style>

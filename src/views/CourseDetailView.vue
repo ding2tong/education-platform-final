@@ -1,5 +1,5 @@
 <template>
-  <div class="page active">
+  <div class="page">
     <div class="container" v-if="courseStore.currentCourse">
       <button class="btn btn--outline btn--sm back-btn" @click="$router.push('/courses')">← 返回所有課程</button>
       <h1>{{ courseStore.currentCourse.title }}</h1>

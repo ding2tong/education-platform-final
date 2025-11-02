@@ -1,5 +1,5 @@
 <template>
-  <div class="page active">
+  <div class="page">
     <div class="container" v-if="lesson">
       <button class="btn btn--outline btn--sm back-btn" @click="$router.push({ name: 'course-detail', params: { id: courseId } })">← 返回單元列表</button>
       <div class="section-content-detail">

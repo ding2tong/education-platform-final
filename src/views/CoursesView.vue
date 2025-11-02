@@ -1,5 +1,5 @@
 <template>
-  <div class="page active">
+  <div class="page">
     <div class="container">
       <h1>所有課程</h1>
       <p v-if="courseStore.courses.length === 0">正在載入課程...</p>

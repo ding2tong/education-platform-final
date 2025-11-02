@@ -1,5 +1,5 @@
 <template>
-  <div class="page active">
+  <div class="page">
     <div class="container">
       <h1>管理後台</h1>
       <div class="admin-nav">

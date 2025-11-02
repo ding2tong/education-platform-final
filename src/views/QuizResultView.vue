@@ -1,5 +1,5 @@
 <template>
-  <div class="page active">
+  <div class="page">
     <div class="container">
       <h1>測驗結果</h1>
       <div v-if="latestResult">

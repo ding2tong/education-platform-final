@@ -1,5 +1,5 @@
 <template>
-  <div class="page active">
+  <div class="page">
     <div class="container">
       <h1>我的學習進度</h1>
       <div v-if="Object.keys(authStore.userProgress).length > 0" class="progress-list">
