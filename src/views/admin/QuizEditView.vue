@@ -51,10 +51,19 @@
         </div>
       </div>
 
-      <div class="form-actions">
-        <button type="button" class="btn btn--outline" @click="cancel">取消</button>
-        <button type="submit" class="btn btn--primary">儲存測驗</button>
-      </div>
+          <div class="form-actions">
+
+            <input type="file" @change="handleFileUpload" accept=".json" style="display: none" ref="fileInput">
+
+            <button type="button" class="btn btn--secondary" @click="triggerFileInput">上傳 JSON</button>
+
+            <button type="button" class="btn btn--outline" @click="cancel">取消</button>
+
+            <button type="submit" class="btn btn--primary">儲存測驗</button>
+
+          </div>
+
+      
     </form>
   </div>
 </template>
@@ -135,8 +144,8 @@ const saveQuiz = async () => {
   console.log('courseId:', courseId);
   console.log('lessonId:', lessonId.value);
   error.value = '';
-  if (!quiz.value.title || quiz.value.questions.length === 0) {
-    error.value = '測驗標題和題目為必填項';
+  if (!quiz.value.title) {
+    error.value = '測驗標題為必填項';
     return;
   }
   for (const q of quiz.value.questions) {
@@ -158,6 +167,54 @@ const saveQuiz = async () => {
     error.value = '儲存測驗失敗，請稍後再試';
     console.error(e);
   }
+};
+
+const fileInput = ref(null);
+
+const triggerFileInput = () => {
+  fileInput.value.click();
+};
+
+const handleFileUpload = (event) => {
+  const file = event.target.files[0];
+  if (!file) return;
+
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    try {
+      const data = JSON.parse(e.target.result);
+      if (!data.title || !Array.isArray(data.questions)) {
+        throw new Error('無效的 JSON 格式：缺少 title 或 questions 欄位');
+      }
+      // Simple validation of question structure
+      for (const q of data.questions) {
+        if (
+          typeof q.question !== 'string' ||
+          !Array.isArray(q.options) ||
+          typeof q.correct !== 'number' ||
+          q.options.length === 0
+        ) {
+          throw new Error(`問題 "${q.question.substring(0, 20)}..." 的結構無效`);
+        }
+      }
+      quiz.value = data;
+      error.value = ''; // Clear previous errors
+      alert('測驗已成功載入！請檢閱後儲存。');
+    } catch (err) {
+      console.error("Error parsing quiz JSON:", err);
+      error.value = `讀取檔案失敗：${err.message}`;
+      alert(error.value);
+    }
+  };
+  reader.onerror = (err) => {
+    console.error("FileReader error:", err);
+    error.value = '讀取檔案時發生錯誤';
+    alert(error.value);
+  };
+  reader.readAsText(file);
+
+  // Reset file input so the same file can be uploaded again
+  event.target.value = '';
 };
 
 const cancel = () => {

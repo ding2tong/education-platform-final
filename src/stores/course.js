@@ -60,12 +60,41 @@ export const useCourseStore = defineStore('course', {
     },
     async deleteCourse(courseId) {
       try {
-        // IMPORTANT: This does not delete subcollections (lessons, quizzes).
-        // A proper implementation requires a Cloud Function for recursive deletion.
-        await deleteDoc(doc(db, 'courses', courseId));
+        const batch = writeBatch(db);
+
+        // 1. Delete the course document itself
+        const courseRef = doc(db, 'courses', courseId);
+        batch.delete(courseRef);
+
+        // 2. Find all users and delete their progress/quiz results for this course
+        const usersCollectionRef = collection(db, 'users');
+        const usersSnapshot = await getDocs(usersCollectionRef);
+
+        for (const userDoc of usersSnapshot.docs) {
+          const userId = userDoc.id;
+          
+          // Delete lesson progress for the course
+          const progressDocRef = doc(db, `users/${userId}/progress`, courseId);
+          batch.delete(progressDocRef);
+
+          // Delete all quiz results for the course
+          const quizResultsCollectionRef = collection(db, `users/${userId}/quizResults`);
+          const q = query(quizResultsCollectionRef, where("courseId", "==", courseId));
+          const quizResultsSnapshot = await getDocs(q);
+          quizResultsSnapshot.forEach(quizDoc => {
+            batch.delete(quizDoc.ref);
+          });
+        }
+
+        // IMPORTANT: This does not delete subcollections (lessons, quizzes) within the course itself.
+        // A proper implementation requires a Cloud Function for recursive deletion of subcollections.
+        // For now, we are manually deleting user progress.
+
+        await batch.commit();
         await this.fetchAllCourses(); // Refresh the list
+
       } catch (error) {
-        console.error("Error deleting course: ", error);
+        console.error("Error deleting course and user progress: ", error);
         throw error;
       }
     },

@@ -1,0 +1,130 @@
+:root {
+  --r-background-color: var(--color-background);
+  --r-main-font: var(--font-family-base);
+  --r-main-font-size: 40px; /* Increased base font size again */
+  --r-main-color: var(--color-text);
+  --r-block-margin: var(--space-16);
+  --r-heading-margin: 0 0 var(--space-24) 0;
+  --r-heading-font: var(--font-family-base);
+  --r-heading-color: var(--color-primary);
+  --r-heading-line-height: var(--line-height-tight);
+  --r-heading-font-weight: var(--font-weight-semibold);
+  --r-heading1-size: 80px; /* Increased heading size again */
+  --r-heading2-size: 72px; /* Increased heading size again */
+  --r-heading3-size: 64px; /* Increased heading size again */
+  --r-heading4-size: 56px; /* Increased heading size again */
+  --r-code-font: monospace;
+  --r-link-color: var(--color-primary);
+  --r-link-color-hover: var(--color-primary-hover);
+  --r-selection-background-color: var(--color-primary);
+  --r-selection-color: var(--color-btn-primary-text);
+}
+
+.reveal-viewport {
+  background: var(--r-background-color);
+}
+
+.reveal {
+  font-family: var(--r-main-font);
+  font-size: var(--r-main-font-size);
+  font-weight: normal;
+  color: var(--r-main-color);
+}
+
+.reveal ::selection {
+  color: var(--r-selection-color);
+  background: var(--r-selection-background-color);
+  text-shadow: none;
+}
+
+.reveal .slides section,
+.reveal .slides section > .slide-background {
+  background-color: var(--r-background-color);
+  text-align: left; /* Force left-alignment */
+}
+
+.reveal h1,
+.reveal h2,
+.reveal h3,
+.reveal h4,
+.reveal h5,
+.reveal h6 {
+  margin: var(--r-heading-margin);
+  color: var(--r-heading-color);
+  font-family: var(--r-heading-font);
+  font-weight: var(--r-heading-font-weight);
+  line-height: var(--r-heading-line-height);
+  letter-spacing: normal;
+  text-transform: none;
+  text-shadow: none;
+  word-wrap: break-word;
+}
+
+.reveal h1 {
+  font-size: var(--r-heading1-size);
+}
+
+.reveal h2 {
+  font-size: var(--r-heading2-size);
+}
+
+.reveal h3 {
+  font-size: var(--r-heading3-size);
+  color: var(--color-text); /* Changed h3 color */
+}
+
+.reveal h4 {
+  font-size: var(--r-heading4-size);
+}
+
+.reveal p {
+  margin: var(--r-block-margin) 0;
+  line-height: 1.6;
+}
+
+.reveal ul,
+.reveal ol {
+  list-style: none; /* Remove bullet points */
+  margin-left: 0; /* Remove indentation */
+  padding-left: 0;
+}
+
+.reveal li {
+  margin-bottom: var(--space-8);
+}
+
+.reveal a {
+  color: var(--r-link-color);
+  text-decoration: none;
+  transition: color .15s ease;
+}
+
+.reveal a:hover {
+  color: var(--r-link-color-hover);
+}
+
+.reveal .controls-arrow {
+  color: var(--r-link-color);
+}
+
+.reveal table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: var(--r-block-margin) 0;
+}
+
+.reveal th,
+.reveal td {
+  border: 1px solid var(--color-border);
+  padding: var(--space-8) var(--space-12);
+  text-align: left;
+}
+
+.reveal th {
+  background-color: var(--color-secondary);
+  font-weight: var(--font-weight-bold);
+}
+
+.reveal .progress-bar {
+  background: var(--r-link-color);
+}

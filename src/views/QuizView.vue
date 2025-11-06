@@ -1,23 +1,41 @@
 <template>
-  <div class="page">
-    <div class="container" v-if="quiz">
-      <button class="btn btn--outline btn--sm back-btn" @click="$router.push({ name: 'course-detail', params: { id: courseId } })">← 返回單元列表</button>
-      <h1>{{ quiz.title }}</h1>
-      <div class="quiz-question" v-for="(question, index) in quiz.questions" :key="question.id">
-        <h4>問題 {{ index + 1 }}：{{ question.question }}</h4>
-        <div class="quiz-options">
+  <div class="page quiz-page">
+    <div class="container" v-if="quiz && currentQuestion">
+      <div class="quiz-header">
+        <h1>{{ quiz.title }}</h1>
+        <div class="progress-bar">
+          <div class="progress-bar__inner" :style="{ width: `${progressPercentage}%` }"></div>
+        </div>
+        <p class="progress-text">問題 {{ currentQuestionIndex + 1 }} / {{ quiz.questions.length }}</p>
+      </div>
+
+      <div class="quiz-card">
+        <div class="quiz-card__question">
+          <p>{{ currentQuestion.question }}</p>
+        </div>
+        <div class="quiz-card__options">
           <div
-            class="quiz-option"
-            v-for="(option, optIndex) in question.options"
-            :key="optIndex"
-            :class="{ selected: quizAnswers[question.id] === optIndex }"
-            @click="selectAnswer(question.id, optIndex)"
+            v-for="(option, index) in currentQuestion.options"
+            :key="index"
+            class="option"
+            :class="getOptionClass(index)"
+            @click="selectAnswer(index)"
           >
-            {{ getOptionLabel(optIndex) }}. {{ option }}
+            <span class="option__letter">{{ getOptionLabel(index) }}</span>
+            <span class="option__text">{{ option }}</span>
           </div>
         </div>
       </div>
-      <button class="btn btn--primary" @click="submitQuiz" style="margin-top: 24px;">提交測驗</button>
+
+      <div class="quiz-footer">
+        <div v-if="answerChecked" class="explanation-card" :class="isCorrect ? 'explanation-card--correct' : 'explanation-card--incorrect'">
+          <h4>{{ isCorrect ? '答對了！' : '再加強' }}</h4>
+          <p>{{ currentQuestion.explanation }}</p>
+        </div>
+        <button v-if="!answerChecked" @click="checkAnswer" :disabled="selectedAnswer === null" class="btn btn--primary btn--lg">確認答案</button>
+        <button v-else @click="nextQuestion" class="btn btn--primary btn--lg">{{ isLastQuestion ? '完成測驗' : '下一題' }}</button>
+      </div>
+
     </div>
     <div class="container" v-else>
       <p>正在載入測驗...</p>
@@ -37,33 +55,67 @@ const courseStore = useCourseStore();
 const authStore = useAuthStore();
 
 const courseId = route.params.courseId;
-const lessonId = route.query.lessonId; // Check for lessonId in the query
+const lessonId = route.query.lessonId;
+
+const quiz = ref(null);
+const currentQuestionIndex = ref(0);
+const selectedAnswer = ref(null);
+const answerChecked = ref(false);
 const quizAnswers = ref({});
 
-onMounted(() => {
+onMounted(async () => {
   if (!courseStore.currentCourse || courseStore.currentCourse.id !== courseId) {
-    courseStore.fetchCourseDetails(courseId);
+    await courseStore.fetchCourseDetails(courseId);
   }
-});
-
-const quiz = computed(() => {
-  if (!courseStore.currentCourse) return null;
+  
   if (lessonId) {
-    // It's a lesson quiz
-    const lesson = courseStore.currentCourse.lessons.find(l => l.id === lessonId);
-    return lesson?.quiz || null;
+    const lesson = courseStore.currentCourse?.lessons.find(l => l.id === lessonId);
+    quiz.value = lesson?.quiz || null;
   } else {
-    // It's a course quiz
-    return courseStore.currentCourse.quiz;
+    quiz.value = courseStore.currentCourse?.quiz || null;
   }
 });
 
-const selectAnswer = (questionId, optionIndex) => {
-  quizAnswers.value[questionId] = optionIndex;
+const currentQuestion = computed(() => quiz.value?.questions[currentQuestionIndex.value]);
+const progressPercentage = computed(() => ((currentQuestionIndex.value) / quiz.value.questions.length) * 100);
+const isLastQuestion = computed(() => currentQuestionIndex.value === quiz.value.questions.length - 1);
+const isCorrect = computed(() => selectedAnswer.value === currentQuestion.value.correct);
+
+const selectAnswer = (index) => {
+  if (!answerChecked.value) {
+    selectedAnswer.value = index;
+  }
 };
 
-const getOptionLabel = (index) => {
-  return String.fromCharCode(97 + index);
+const getOptionLabel = (index) => String.fromCharCode(65 + index);
+
+const getOptionClass = (index) => {
+  if (!answerChecked.value) {
+    return { selected: selectedAnswer.value === index };
+  }
+  if (index === currentQuestion.value.correct) {
+    return { correct: true };
+  }
+  if (index === selectedAnswer.value && index !== currentQuestion.value.correct) {
+    return { incorrect: true };
+  }
+  return {};
+};
+
+const checkAnswer = () => {
+  if (selectedAnswer.value === null) return;
+  answerChecked.value = true;
+  quizAnswers.value[currentQuestion.value.id] = selectedAnswer.value;
+};
+
+const nextQuestion = () => {
+  if (isLastQuestion.value) {
+    submitQuiz();
+  } else {
+    currentQuestionIndex.value++;
+    selectedAnswer.value = null;
+    answerChecked.value = false;
+  }
 };
 
 const submitQuiz = async () => {
@@ -71,38 +123,147 @@ const submitQuiz = async () => {
   await authStore.submitQuiz(courseId, quiz.value.id, quizAnswers.value, lessonId);
   router.push({ name: 'quiz-result', params: { courseId: courseId }, query: { lessonId: lessonId } });
 };
+
 </script>
 
 <style scoped>
-.back-btn {
-  margin-bottom: var(--space-16);
+.quiz-page {
+  background-color: var(--color-background);
 }
 
-.quiz-question {
-  margin-bottom: var(--space-24);
+.container {
+  max-width: 800px;
 }
 
-.quiz-options {
+.quiz-header {
+  text-align: center;
+  margin-bottom: var(--space-32);
+}
+
+.progress-bar {
+  width: 100%;
+  height: 8px;
+  background-color: var(--color-secondary);
+  border-radius: var(--radius-full);
+  overflow: hidden;
+  margin: var(--space-16) 0 var(--space-8) 0;
+}
+
+.progress-bar__inner {
+  height: 100%;
+  background-color: var(--color-primary);
+  transition: width 0.3s ease;
+}
+
+.progress-text {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-secondary);
+}
+
+.quiz-card {
+  background-color: var(--color-surface);
+  border-radius: var(--radius-lg);
+  padding: var(--space-24);
+  box-shadow: var(--shadow-md);
+}
+
+.quiz-card__question p {
+  font-size: var(--font-size-xl);
+  font-weight: var(--font-weight-semibold);
+  margin: 0 0 var(--space-24) 0;
+}
+
+.quiz-card__options {
   display: flex;
   flex-direction: column;
-  gap: var(--space-8);
+  gap: var(--space-16);
 }
 
-.quiz-option {
-  padding: var(--space-12);
-  border: 1px solid var(--color-border);
+.option {
+  display: flex;
+  align-items: center;
+  padding: var(--space-16);
+  border: 2px solid var(--color-border);
   border-radius: var(--radius-base);
   cursor: pointer;
   transition: all 0.2s ease;
 }
 
-.quiz-option:hover {
+.option:hover {
+  border-color: var(--color-primary);
+}
+
+.option.selected {
+  border-color: var(--color-primary);
   background-color: var(--color-secondary);
 }
 
-.quiz-option.selected {
-  background-color: var(--color-primary);
-  color: var(--color-btn-primary-text);
+.option.correct {
+  border-color: var(--color-success);
+  background-color: #e6f7f3;
+  color: var(--color-success);
+  font-weight: var(--font-weight-bold);
+}
+
+.option.incorrect {
+  border-color: var(--color-error);
+  background-color: #fff0f0;
+  color: var(--color-error);
+}
+
+.option__letter {
+  font-weight: var(--font-weight-bold);
+  margin-right: var(--space-16);
+  border: 2px solid var(--color-border);
+  border-radius: var(--radius-full);
+  width: 32px;
+  height: 32px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.option.selected .option__letter {
   border-color: var(--color-primary);
+}
+
+.option.correct .option__letter {
+  background-color: var(--color-success);
+  color: white;
+  border-color: var(--color-success);
+}
+
+.option.incorrect .option__letter {
+  background-color: var(--color-error);
+  color: white;
+  border-color: var(--color-error);
+}
+
+.quiz-footer {
+  margin-top: var(--space-32);
+  text-align: center;
+}
+
+.explanation-card {
+  padding: var(--space-16);
+  border-radius: var(--radius-base);
+  margin-bottom: var(--space-24);
+  text-align: left;
+}
+
+.explanation-card--correct {
+  background-color: #e6f7f3;
+  border-left: 5px solid var(--color-success);
+}
+
+.explanation-card--incorrect {
+  background-color: #fff0f0;
+  border-left: 5px solid var(--color-error);
+}
+
+.btn--lg {
+  padding: var(--space-16) var(--space-32);
+  font-size: var(--font-size-lg);
+  min-width: 200px;
 }
 </style>
