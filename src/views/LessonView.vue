@@ -43,8 +43,6 @@ const lesson = computed(() => {
   return courseStore.currentCourse?.lessons?.find(l => l.id === lessonId);
 });
 
-
-
 const markComplete = () => {
   authStore.markLessonComplete(courseId, lessonId);
   alert('已標記為完成！');

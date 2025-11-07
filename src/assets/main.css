@@ -75,7 +75,7 @@ h3 { font-size: var(--font-size-xl); }
 h4 { font-size: var(--font-size-lg); }
 
 .container {
-  max-width: var(--container-lg);
+  max-width: var(--container-xl);
   margin: 0 auto;
   padding: 0 var(--space-16);
 }

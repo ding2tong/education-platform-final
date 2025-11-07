@@ -22,7 +22,7 @@ const props = defineProps({
 });
 
 const slides = ref([]);
-const md = markdownit();
+const md = markdownit({ html: true });
 const revealContainer = ref(null);
 let deck;
 
@@ -38,6 +38,7 @@ const initializeReveal = async () => {
   await nextTick();
   if (revealContainer.value) {
     deck = new Reveal(revealContainer.value, {
+      autoAnimate: true,
       plugins: [Markdown],
     });
     deck.initialize();
