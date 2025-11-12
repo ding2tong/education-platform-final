@@ -27,7 +27,20 @@ const revealContainer = ref(null);
 let deck;
 
 const parseMarkdown = (markdownText) => {
-  const slideContents = markdownText.split(/^---s*$/m).map(content => md.render(content));
+  const isMobile = window.matchMedia("(max-width: 768px)").matches;
+
+  const iframeRegex = /<iframe.*?src="(.*?)".*?<\/iframe>/g;
+  const processedMarkdown = markdownText.replace(iframeRegex, (match, src) => {
+    if (isMobile) {
+      // On mobile, create a button link
+      return `<a href="${src}" target="_blank" class="btn btn--primary" style="margin: var(--space-16) auto; display: block; width: fit-content;">點選觀看內容</a>`;
+    } else {
+      // On desktop/tablet, wrap the iframe in a container
+      return `<div class="iframe-container">${match}</div>`;
+    }
+  });
+
+  const slideContents = processedMarkdown.split(/^---s*$/m).map(content => md.render(content));
   slides.value = slideContents;
 };
 
@@ -59,11 +72,25 @@ onUnmounted(() => {
   if (deck) {
     deck.destroy();
   }
+  // Explicitly remove reveal-scroll class from body
+  document.body.classList.remove('reveal-scroll');
+
+  // Remove any scrollbar elements added by reveal.js
+  const scrollbar = document.querySelector('.scrollbar');
+  if (scrollbar) {
+    scrollbar.remove();
+  }
 });
 </script>
 
 <style>
 .reveal {
-  height:70vh;
+  height: 70vh;
+}
+
+@media (max-width: 768px) {
+  .reveal {
+    height: 40vh;
+  }
 }
 </style>

@@ -50,20 +50,49 @@ const viewCourse = (courseId) => {
 </script>
 
 <style scoped>
+
 .category-title {
+
   margin-top: 32px;
+
   margin-bottom: 16px;
+
   border-bottom: 2px solid var(--color-border);
+
   padding-bottom: 8px;
+
 }
+
+
 
 .course-grid {
+
   display: grid;
+
   grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+
   gap: 24px;
+
 }
 
+
+
 h1 {
+
   color: var(--color-text);
+
 }
+
+
+
+@media (max-width: 768px) {
+
+  .course-grid {
+
+    grid-template-columns: 1fr;
+
+  }
+
+}
+
 </style>

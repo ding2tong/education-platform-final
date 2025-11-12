@@ -1,7 +1,10 @@
 <template>
   <div class="page">
     <div class="container" v-if="lesson">
-      <button class="btn btn--outline btn--sm back-btn" @click="$router.push({ name: 'course-detail', params: { id: courseId } })">← 返回單元列表</button>
+      <div class="lesson-header">
+        <button class="btn btn--outline btn--sm back-btn" @click="$router.push({ name: 'course-detail', params: { id: courseId } })">← 返回單元列表</button>
+        <h2>{{ lesson.title }}</h2>
+      </div>
       <div class="lesson-content-wrapper">
         <RevealSlides :key="lessonId" :markdown="lesson.content" />
         <div class="section-actions">
@@ -59,14 +62,23 @@ const startQuiz = (isLessonQuiz) => {
 </script>
 
 <style scoped>
-.back-btn {
-  margin-bottom: var(--space-16);
+.lesson-header {
+  position: sticky;
+  top: 65px; /* Adjust this value based on your navbar height */
+  background-color: var(--color-background);
+  padding: var(--space-16) 0;
+  z-index: 99;
+}
+
+.lesson-header h2 {
+  margin-top: var(--space-16);
 }
 
 .lesson-content-wrapper {
   display: flex;
   flex-direction: column;
-  gap: var(--space-16); /* Reduced gap */
+  gap: var(--space-16);
+  padding-top: var(--space-16); /* Add padding to avoid content being hidden by the sticky header */
 }
 
 .section-actions {

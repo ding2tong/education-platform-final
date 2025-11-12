@@ -43,7 +43,33 @@ const viewLesson = (lessonId) => {
 </script>
 
 <style scoped>
+
 .back-btn {
+
   margin-bottom: var(--space-16);
+
 }
+
+
+
+.completion-badge {
+
+  display: inline-block;
+
+  background-color: var(--color-success);
+
+  color: white;
+
+  padding: 4px 8px;
+
+  border-radius: var(--radius-full);
+
+  font-size: var(--font-size-sm);
+
+  font-weight: var(--font-weight-bold);
+
+  margin-top: var(--space-12);
+
+}
+
 </style>
