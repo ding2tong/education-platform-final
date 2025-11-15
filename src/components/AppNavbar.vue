@@ -138,7 +138,6 @@ const closeMenu = () => {
   background: none;
   border: none;
   padding: 0;
-  z-index: 101;
 }
 
 /* Responsive Styles */
@@ -146,37 +145,27 @@ const closeMenu = () => {
   .nav-menu-wrapper {
     display: none;
     position: absolute;
-    top: 0;
+    top: 100%;
     left: 0;
     width: 100%;
-    height: 100vh;
     background-color: var(--color-surface);
     flex-direction: column;
     align-items: center;
-    justify-content: center;
     padding: 24px 0;
     box-shadow: var(--shadow-md);
-    transition: transform 0.3s ease-in-out;
-    transform: translateX(100%);
   }
 
   .nav-menu-wrapper.is-open {
     display: flex;
-    transform: translateX(0);
   }
 
   .nav-menu {
     flex-direction: column;
     text-align: center;
-    gap: 32px;
-  }
-
-  .nav-link {
-    font-size: var(--font-size-xl);
   }
 
   .nav-actions {
-    margin-top: 32px;
+    margin-top: 24px;
   }
 
   .hamburger {

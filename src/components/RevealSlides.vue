@@ -53,6 +53,8 @@ const initializeReveal = async () => {
     deck = new Reveal(revealContainer.value, {
       autoAnimate: true,
       plugins: [Markdown],
+      viewDistance: 3,
+      mobileViewDistance: 3,
     });
     deck.initialize();
   }

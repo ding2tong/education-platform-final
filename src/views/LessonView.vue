@@ -6,7 +6,8 @@
         <h2>{{ lesson.title }}</h2>
       </div>
       <div class="lesson-content-wrapper">
-        <RevealSlides :key="lessonId" :markdown="lesson.content" />
+        <!-- <RevealWrapper :key="lessonId" :markdown="lesson.content" /> -->
+        <div v-html="lesson.content"></div>
         <div class="section-actions">
           <button class="btn btn--primary" @click="markComplete">標記為完成</button>
           <button class="btn btn--secondary" @click="startQuiz(true)" v-if="lesson.quiz">開始單元測驗</button>
@@ -22,7 +23,7 @@
 
 <script setup>
 import { computed, onMounted } from 'vue';
-import RevealSlides from '@/components/RevealSlides.vue';
+import RevealWrapper from '@/components/RevealWrapper.vue';
 import { useRoute, useRouter } from 'vue-router';
 import { useCourseStore } from '@/stores/course';
 import { useAuthStore } from '@/stores/auth';
