@@ -83,16 +83,4 @@ h1 {
 
 }
 
-
-
-@media (max-width: 768px) {
-
-  .course-grid {
-
-    grid-template-columns: 1fr;
-
-  }
-
-}
-
 </style>

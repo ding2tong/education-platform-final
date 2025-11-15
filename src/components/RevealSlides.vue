@@ -28,15 +28,13 @@ const revealContainer = ref(null);
 let deck;
 
 const parseMarkdown = (markdownText) => {
-  const isMobile = window.matchMedia("(max-width: 768px)").matches;
-
   const slideContents = markdownText.split(/^---s*$/m).map(content => {
-    const iframeRegex = /<iframe.*?src="(.*?)".*?<\/iframe>/g;
-    const processedContent = content.replace(iframeRegex, (match, src) => {
-      if (isMobile) {
-        return `<a href="${src}" target="_blank" class="btn btn--primary" style="margin: var(--space-16) auto; display: block; width: fit-content;">點選觀看內容</a>`;
+    const iframeRegex = /<iframe(.*?)src="(.*?)"(.*?)<\/iframe>/g;
+    const processedContent = content.replace(iframeRegex, (match, preAttributes, src, postAttributes) => {
+      if (src.includes('youtube.com')) {
+        return `<div class="iframe-container youtube-iframe-container"><iframe${preAttributes}src="${src}"${postAttributes}></iframe></div>`;
       } else {
-        return `<div class="iframe-container">${match}</div>`;
+        return `<div class="iframe-container scaled-iframe-container"><iframe${preAttributes}src="${src}"${postAttributes}></iframe></div>`;
       }
     });
     return md.render(processedContent);
@@ -89,11 +87,5 @@ onUnmounted(() => {
 <style>
 .reveal {
   height: 70vh;
-}
-
-@media (max-width: 768px) {
-  .reveal {
-    height: 40vh;
-  }
 }
 </style>

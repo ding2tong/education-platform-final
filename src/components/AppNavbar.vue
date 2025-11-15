@@ -5,13 +5,11 @@ import { useRouter } from 'vue-router'
 
 const authStore = useAuthStore()
 const router = useRouter()
-const isMenuOpen = ref(false)
 
 const loginWithGoogle = async () => {
   try {
     await authStore.loginWithGoogle()
     router.push('/courses')
-    isMenuOpen.value = false
   } catch (error) {
     console.error(error)
   }
@@ -20,33 +18,22 @@ const loginWithGoogle = async () => {
 const logout = () => {
   authStore.logout()
   router.push('/')
-  isMenuOpen.value = false
-}
-
-const closeMenu = () => {
-  isMenuOpen.value = false
 }
 </script>
 
 <template>
   <nav class="navbar">
     <div class="nav-container">
-      <router-link to="/" class="nav-brand-link" @click="closeMenu">
+      <router-link to="/" class="nav-brand-link">
         <div class="nav-brand">建祥教育訓練平台</div>
       </router-link>
 
-      <button class="hamburger" @click="isMenuOpen = !isMenuOpen" :class="{ 'is-active': isMenuOpen }">
-        <span></span>
-        <span></span>
-        <span></span>
-      </button>
-
-      <div class="nav-menu-wrapper" :class="{ 'is-open': isMenuOpen }">
+      <div class="nav-menu-wrapper">
         <div class="nav-menu">
-          <router-link to="/" class="nav-link" @click="closeMenu">首頁</router-link>
-          <router-link to="/courses" class="nav-link" v-if="authStore.isLoggedIn" @click="closeMenu">課程</router-link>
-          <router-link to="/dashboard" class="nav-link" v-if="authStore.isLoggedIn" @click="closeMenu">學習進度</router-link>
-          <router-link to="/admin" class="nav-link" v-if="authStore.isAdmin" @click="closeMenu">管理後台</router-link>
+          <router-link to="/" class="nav-link">首頁</router-link>
+          <router-link to="/courses" class="nav-link" v-if="authStore.isLoggedIn">課程</router-link>
+          <router-link to="/dashboard" class="nav-link" v-if="authStore.isLoggedIn">學習進度</router-link>
+          <router-link to="/admin" class="nav-link" v-if="authStore.isAdmin">管理後台</router-link>
         </div>
         <div class="nav-actions">
           <template v-if="!authStore.isLoggedIn">
@@ -134,61 +121,5 @@ const closeMenu = () => {
 
 .hamburger {
   display: none;
-  cursor: pointer;
-  background: none;
-  border: none;
-  padding: 0;
-}
-
-/* Responsive Styles */
-@media (max-width: 768px) {
-  .nav-menu-wrapper {
-    display: none;
-    position: absolute;
-    top: 100%;
-    left: 0;
-    width: 100%;
-    background-color: var(--color-surface);
-    flex-direction: column;
-    align-items: center;
-    padding: 24px 0;
-    box-shadow: var(--shadow-md);
-  }
-
-  .nav-menu-wrapper.is-open {
-    display: flex;
-  }
-
-  .nav-menu {
-    flex-direction: column;
-    text-align: center;
-  }
-
-  .nav-actions {
-    margin-top: 24px;
-  }
-
-  .hamburger {
-    display: block;
-  }
-  
-  .hamburger span {
-    display: block;
-    width: 25px;
-    height: 3px;
-    margin: 5px 0;
-    background-color: var(--color-text);
-    transition: all 0.3s ease-in-out;
-  }
-
-  .hamburger.is-active span:nth-child(1) {
-    transform: translateY(8px) rotate(45deg);
-  }
-  .hamburger.is-active span:nth-child(2) {
-    opacity: 0;
-  }
-  .hamburger.is-active span:nth-child(3) {
-    transform: translateY(-8px) rotate(-45deg);
-  }
 }
 </style>
