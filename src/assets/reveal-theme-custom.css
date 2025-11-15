@@ -42,6 +42,16 @@
   margin: 0 auto; /* Center the content */
 }
 
+/* Override for sections containing iframes */
+.reveal .slides section:has(.iframe-container) {
+  max-width: 100%;
+  padding: 0;
+}
+
+.iframe-container {
+  padding: 0 var(--space-32);
+}
+
 .reveal .slides section,
 .reveal .slides section > .slide-background {
   background-color: var(--r-background-color);
@@ -101,7 +111,7 @@
 .reveal a {
   color: var(--r-link-color);
   text-decoration: none;
-  transition: color .15s ease;
+  transition: color 0.15s ease;
 }
 
 .reveal a:hover {
