@@ -50,6 +50,7 @@ const initializeReveal = async () => {
   await nextTick();
   if (revealContainer.value) {
     deck = new Reveal(revealContainer.value, {
+      embedded: true,
       autoAnimate: true,
       plugins: [Markdown],
     });
