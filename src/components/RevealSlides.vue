@@ -69,9 +69,30 @@ onMounted(() => {
   initializeReveal();
 });
 
-watch(() => props.markdown, (newMarkdown) => {
+watch(() => props.markdown, async (newMarkdown) => {
+  if (!deck) return;
+
+  // 1. Get current state
+  const indices = deck.getIndices();
+
+  // 2. Update Vue's data, which will update the DOM
   parseMarkdown(newMarkdown);
-  initializeReveal();
+
+  // 3. Wait for the DOM to be updated by Vue
+  await nextTick();
+
+  // 4. Tell Reveal.js to sync with the new DOM
+  deck.sync();
+
+  // 5. Restore the slide index, just in case sync() resets it
+  // We check if the slide index is still valid for the new content length
+  const newTotalSlides = deck.getTotalSlides();
+  if (indices.h < newTotalSlides) {
+    deck.slide(indices.h, indices.v, indices.f);
+  } else {
+    // If the current slide was deleted, go to the new last slide
+    deck.slide(newTotalSlides - 1);
+  }
 });
 
 onUnmounted(() => {
