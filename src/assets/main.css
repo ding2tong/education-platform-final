@@ -1,3 +1,5 @@
+@import './forms.css';
+
 :root {
   --color-primary: #33a6b8;
   --color-primary-hover: #2b8a9a;
