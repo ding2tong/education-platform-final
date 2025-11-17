@@ -36,6 +36,7 @@ const logout = () => {
             >學習進度</router-link
           >
           <router-link to="/admin" class="nav-link" v-if="authStore.isAdmin">管理後台</router-link>
+          <router-link to="/admin/help" class="nav-link" v-if="authStore.isAdmin">說明文件</router-link>
         </div>
         <div class="nav-actions">
           <template v-if="!authStore.isLoggedIn">

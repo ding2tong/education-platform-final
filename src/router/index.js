@@ -61,6 +61,11 @@ const router = createRouter({
               name: 'admin-dashboard',
               component: () => import('../views/admin/DashboardAdminView.vue')
             },
+            {
+              path: 'help',
+              name: 'admin-help',
+              component: () => import('../views/admin/HelpView.vue')
+            },
 
             {
               path: 'courses/:courseId/lessons/new',
