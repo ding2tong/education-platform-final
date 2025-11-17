@@ -18,7 +18,7 @@
               </div>
               <div class="form-group">
                 <label class="form-label">單元內容 (Markdown)</label>
-                <textarea class="form-control markdown-textarea" v-model="lesson.content" @paste="handlePaste"></textarea>
+                <textarea ref="markdownEditor" class="form-control markdown-textarea" v-model="lesson.content" @paste="handlePaste"></textarea>
               </div>
               <div class="error-message" v-if="error">{{ error }}</div>
             </div>
@@ -29,8 +29,8 @@
           <div class="card">
             <div class="card__body">
               <h3>投影片預覽</h3>
-              <div v-if="lesson.content" class="reveal-preview-wrapper">
-                <RevealSlides :markdown="lesson.content" />
+              <div v-if="lesson.content" class="aspect-ratio-container">
+                <RevealSlides :markdown="lesson.content" @slide-changed="handleSlideChange" />
               </div>
               <p v-else class="text-secondary">在此處輸入 Markdown 內容以預覽投影片。</p>
             </div>
@@ -73,6 +73,7 @@ const isNewLesson = computed(() => !lessonId);
 
 const lesson = ref({ title: '', description: '', content: '' });
 const error = ref('');
+const markdownEditor = ref(null);
 
 const pageTitle = computed(() => {
   const baseTitle = isNewLesson.value ? '新增課程單元' : '編輯課程單元';
@@ -134,6 +135,36 @@ const handlePaste = (event) => {
     lesson.value.content = newContent;
   }
 };
+
+const handleSlideChange = (slideIndex) => {
+  if (!markdownEditor.value || !lesson.value.content) return;
+
+  const editor = markdownEditor.value;
+  const content = lesson.value.content;
+  const separatorRegex = /^---s*$/gm; // g for global, m for multiline
+
+  // Find all separator indices
+  const separatorIndices = [0]; // The first slide starts at index 0
+  let match;
+  while ((match = separatorRegex.exec(content)) !== null) {
+    separatorIndices.push(match.index);
+  }
+
+  if (slideIndex >= separatorIndices.length) return;
+
+  const targetCharIndex = separatorIndices[slideIndex];
+
+  // Set selection to the target position to make it visible
+  editor.focus();
+  editor.setSelectionRange(targetCharIndex, targetCharIndex);
+
+  // Calculate and set scrollTop
+  const lineHeight = parseFloat(getComputedStyle(editor).lineHeight);
+  const lines = content.substring(0, targetCharIndex).split('\n').length;
+  
+  // Scroll the target line to the top of the textarea
+  editor.scrollTop = (lines - 1) * lineHeight;
+};
 </script>
 
 <style scoped>
@@ -190,11 +221,24 @@ const handlePaste = (event) => {
   min-height: 400px;
 }
 
-.reveal-preview-wrapper {
-  flex-grow: 1;
+.aspect-ratio-container {
+  position: relative;
+  width: 100%;
+  max-width: 960px; /* Max width for the presentation */
+  margin: auto; /* Center horizontally and vertically within flex container */
+  height: 0;
+  padding-top: 56.25%; /* 16:9 Aspect Ratio */
   border: 1px solid var(--color-border);
   border-radius: var(--radius-base);
   overflow: hidden;
+}
+
+.aspect-ratio-container > :deep(.reveal) {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
 }
 
 .text-secondary {

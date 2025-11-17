@@ -25,7 +25,9 @@
   background-color: var(--color-surface);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-md);
-  transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+  transition:
+    border-color 0.15s ease-in-out,
+    box-shadow 0.15s ease-in-out;
 }
 
 .form-control:focus {
@@ -42,7 +44,7 @@
 }
 
 textarea.form-control {
-  min-height: 120px;
+  min-height: 6px;
   resize: vertical;
 }
 

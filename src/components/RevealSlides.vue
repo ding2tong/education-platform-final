@@ -22,6 +22,8 @@ const props = defineProps({
   },
 });
 
+const emit = defineEmits(['slide-changed']);
+
 const slides = ref([]);
 const md = markdownit({ html: true }).use(markdownitIframe);
 const revealContainer = ref(null);
@@ -55,6 +57,10 @@ const initializeReveal = async () => {
       plugins: [Markdown],
     });
     deck.initialize();
+    deck.on('slidechanged', event => {
+      // event.indexh is the horizontal slide index
+      emit('slide-changed', event.indexh);
+    });
   }
 };
 
@@ -85,6 +91,6 @@ onUnmounted(() => {
 
 <style>
 .reveal {
-  height: 70vh;
+  /* height: 100%; */ /* Removed to allow parent to control size */
 }
 </style>

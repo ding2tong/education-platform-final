@@ -64,7 +64,9 @@ const startQuiz = (isLessonQuiz) => {
         <h2>{{ lesson.title }}</h2>
       </div>
       <div class="lesson-content-wrapper">
-        <RevealSlides :key="lessonId" :markdown="lesson.content" />
+        <div class="aspect-ratio-container">
+          <RevealSlides :key="lessonId" :markdown="lesson.content" />
+        </div>
         <div class="section-actions">
           <button class="btn btn--primary" @click="markComplete">標記為完成</button>
           <button class="btn btn--secondary" @click="openOriginalLink" v-if="iframeSrc">
@@ -109,6 +111,26 @@ const startQuiz = (isLessonQuiz) => {
   flex-direction: column;
   gap: var(--space-16);
   padding-top: var(--space-4); /* Add padding to avoid content being hidden by the sticky header */
+}
+
+.aspect-ratio-container {
+  position: relative;
+  width: 100%;
+  max-width: 960px; /* Max width for the presentation */
+  margin: auto; /* Center horizontally and vertically */
+  height: 0;
+  padding-top: 56.25%; /* 16:9 Aspect Ratio */
+  background-color: #000; /* Add a background for letterboxing */
+  border-radius: var(--radius-base);
+  overflow: hidden;
+}
+
+.aspect-ratio-container > :deep(.reveal) {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
 }
 
 .section-actions {
