@@ -215,6 +215,11 @@ export const useAuthStore = defineStore('auth', {
       await batch.commit();
       // ----------------------------------------------------------
 
+      // If this was a lesson quiz, automatically mark the lesson as complete.
+      if (lessonId) {
+        await this.markLessonComplete(courseId, lessonId);
+      }
+
       // Reload user data to make the new result available immediately
       await this.loadUserData();
     },
