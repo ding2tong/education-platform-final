@@ -89,46 +89,7 @@ const startQuiz = (isLessonQuiz) => {
   </div>
 </template>
 
-<script setup>
-import { computed, onMounted } from 'vue'
-import RevealSlides from '@/components/RevealSlides.vue'
-import { useRoute, useRouter } from 'vue-router'
-import { useCourseStore } from '@/stores/course'
-import { useAuthStore } from '@/stores/auth'
 
-const route = useRoute()
-const router = useRouter()
-const courseStore = useCourseStore()
-const authStore = useAuthStore()
-
-const courseId = route.params.courseId
-const lessonId = route.params.lessonId
-
-onMounted(() => {
-  // Ensure the course details, including lessons, are loaded
-  if (!courseStore.currentCourse || courseStore.currentCourse.id !== courseId) {
-    courseStore.fetchCourseDetails(courseId)
-  }
-})
-
-const lesson = computed(() => {
-  return courseStore.currentCourse?.lessons?.find((l) => l.id === lessonId)
-})
-
-const markComplete = () => {
-  authStore.markLessonComplete(courseId, lessonId)
-  alert('已標記為完成！')
-}
-
-const startQuiz = (isLessonQuiz) => {
-  const params = { courseId: courseId }
-  const query = {}
-  if (isLessonQuiz) {
-    query.lessonId = lessonId
-  }
-  router.push({ name: 'quiz', params: params, query: query })
-}
-</script>
 
 <style scoped>
 .lesson-header {
