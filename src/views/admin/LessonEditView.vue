@@ -14,7 +14,7 @@
           </div>
           <div class="form-group">
             <label class="form-label">單元內容 (Markdown)</label>
-            <textarea class="form-control" v-model="lesson.content" rows="10"></textarea>
+            <textarea class="form-control" v-model="lesson.content" rows="10" @paste="handlePaste"></textarea>
           </div>
           <div class="error-message" v-if="error">{{ error }}</div>
         </div>
@@ -87,6 +87,24 @@ const cancel = () => {
 
 const editLessonQuiz = () => {
   router.push({ name: 'admin-quiz-edit', params: { courseId, lessonId } });
+};
+
+const handlePaste = (event) => {
+  const pastedText = (event.clipboardData || window.clipboardData).getData('text');
+  const urlRegex = /^(https?:\/\/[^\s]+)$/;
+
+  // Check if the pasted text is a plain URL and not already an iframe
+  if (urlRegex.test(pastedText) && !pastedText.includes('<iframe')) {
+    event.preventDefault();
+    const iframeTag = `<iframe src="${pastedText}"></iframe>`;
+    
+    // Insert the iframe tag at the current cursor position
+    const textarea = event.target;
+    const start = textarea.selectionStart;
+    const end = textarea.selectionEnd;
+    const newContent = lesson.value.content.substring(0, start) + iframeTag + lesson.value.content.substring(end);
+    lesson.value.content = newContent;
+  }
 };
 </script>
 
