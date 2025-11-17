@@ -65,6 +65,7 @@ const startQuiz = (isLessonQuiz) => {
       </div>
       <div class="lesson-content-wrapper">
         <RevealSlides :key="lessonId" :markdown="lesson.content" />
+        <RevealSlides :key="lessonId" :markdown="lesson.content" />
         <div class="section-actions">
           <button class="btn btn--primary" @click="markComplete">標記為完成</button>
           <button class="btn btn--secondary" @click="openOriginalLink" v-if="iframeSrc">

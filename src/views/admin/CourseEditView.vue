@@ -190,56 +190,11 @@ const editQuiz = () => {
 .form-row {
   display: flex;
   gap: var(--space-24);
+  margin-bottom: var(--space-24);
 }
 
 .form-row .form-group {
   flex: 1;
-}
-
-/* Apply consistent spacing and styles to form elements */
-.form-group {
-  margin-bottom: var(--space-24);
-}
-
-.form-label {
-  display: block;
-  margin-bottom: var(--space-8);
-  font-weight: var(--font-weight-medium);
-}
-
-.form-control {
-  display: block;
-  width: 100%;
-  padding: var(--space-8) var(--space-12);
-  font-size: var(--font-size-base);
-  font-family: var(--font-family-base);
-  line-height: 1.5;
-  color: var(--color-text);
-  background-color: var(--color-surface);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-base);
-  transition: border-color .15s ease-in-out,box-shadow .15s ease-in-out;
-}
-
-.form-control:focus {
-  color: var(--color-text);
-  background-color: var(--color-surface);
-  border-color: var(--color-primary);
-  outline: 0;
-  box-shadow: 0 0 0 0.25rem var(--color-focus-ring);
-}
-
-textarea.form-control {
-  min-height: 120px;
-}
-
-select.form-control {
-  -webkit-appearance: none;
-  -moz-appearance: none;
-  appearance: none;
-  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%23343a40' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M2 5l6 6 6-6'/%3e%3c/svg%3e");
-  background-repeat: no-repeat;
-  background-position: right 0.75rem center;
-  background-size: 16px 12px;
+  margin-bottom: 0;
 }
 </style>

@@ -32,12 +32,16 @@ const logout = () => {
         <div class="nav-menu">
           <router-link to="/" class="nav-link">首頁</router-link>
           <router-link to="/courses" class="nav-link" v-if="authStore.isLoggedIn">課程</router-link>
-          <router-link to="/dashboard" class="nav-link" v-if="authStore.isLoggedIn">學習進度</router-link>
+          <router-link to="/dashboard" class="nav-link" v-if="authStore.isLoggedIn"
+            >學習進度</router-link
+          >
           <router-link to="/admin" class="nav-link" v-if="authStore.isAdmin">管理後台</router-link>
         </div>
         <div class="nav-actions">
           <template v-if="!authStore.isLoggedIn">
-            <button class="btn btn--sm btn--primary" @click="loginWithGoogle">使用 Google 登入</button>
+            <button class="btn btn--sm btn--primary" @click="loginWithGoogle">
+              使用 Google 登入
+            </button>
           </template>
           <template v-else>
             <div class="user-menu">
