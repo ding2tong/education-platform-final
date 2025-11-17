@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <link rel="stylesheet" href="/node_modules/reveal.js/dist/reveal.css">
+  <link rel="stylesheet" href="/src/assets/reveal-theme-custom.css">
+  <style>
+    /* Basic styles to make it fill the page */
+    html, body, .reveal, .slides, section {
+      width: 100%;
+      height: 100%;
+      margin: 0;
+      padding: 0;
+      overflow: hidden;
+    }
+  </style>
+</head>
+<body>
+  <div class="reveal">
+    <div class="slides">
+      <section data-markdown>
+        <textarea data-template>
+          <!-- Content will be injected here -->
+        </textarea>
+      </section>
+    </div>
+  </div>
+  <script src="/node_modules/reveal.js/dist/reveal.js"></script>
+  <script src="/node_modules/reveal.js/plugin/markdown/markdown.js"></script>
+  <script>
+    // 1. Initialize Reveal.js without any content first
+    const deck = new Reveal({
+      plugins: [ RevealMarkdown ],
+      viewDistance: 3,
+      mobileViewDistance: 3,
+    });
+    deck.initialize();
+
+    // 2. Listen for messages from the parent window
+    window.addEventListener('message', event => {
+      // A security check for origin is recommended in production
+      // if (event.origin !== 'http://your-app-origin.com') return;
+
+      const markdownContent = event.data.markdown;
+      if (typeof markdownContent === 'string') {
+        // 3. Update the textarea and re-sync Reveal.js
+        const textarea = document.querySelector('textarea[data-template]');
+        textarea.textContent = markdownContent;
+        deck.sync(); // Re-syncs Reveal to load the new content
+        deck.slide(0, 0, 0); // Go to the first slide
+      }
+    });
+  </script>
+</body>
+</html>
