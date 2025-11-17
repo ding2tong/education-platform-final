@@ -13,6 +13,7 @@ import Markdown from 'reveal.js/plugin/markdown/markdown.esm.js';
 import 'reveal.js/dist/reveal.css';
 import '@/assets/reveal-theme-custom.css';
 import markdownit from 'markdown-it';
+import markdownitIframe from 'markdown-it-iframe';
 
 const props = defineProps({
   markdown: {
@@ -22,25 +23,23 @@ const props = defineProps({
 });
 
 const slides = ref([]);
-const md = markdownit({ html: true });
+const md = markdownit({ html: true }).use(markdownitIframe);
 const revealContainer = ref(null);
 let deck;
 
 const parseMarkdown = (markdownText) => {
-  const isMobile = window.matchMedia("(max-width: 768px)").matches;
-
-  const iframeRegex = /<iframe.*?src="(.*?)".*?<\/iframe>/g;
-  const processedMarkdown = markdownText.replace(iframeRegex, (match, src) => {
-    if (isMobile) {
-      // On mobile, create a button link
-      return `<a href="${src}" target="_blank" class="btn btn--primary" style="margin: var(--space-16) auto; display: block; width: fit-content;">點選觀看內容</a>`;
-    } else {
-      // On desktop/tablet, wrap the iframe in a container
-      return `<div class="iframe-container">${match}</div>`;
-    }
+  const slideContents = markdownText.split(/^---s*$/m).map(content => {
+    const iframeRegex = /<iframe(.*?)src="(.*?)"(.*?)<\/iframe>/g;
+    const processedContent = content.replace(iframeRegex, (match, preAttributes, src, postAttributes) => {
+      if (src.includes('youtube.com')) {
+        return `<div class="iframe-container youtube-iframe-container"><iframe${preAttributes}src="${src}"${postAttributes}></iframe></div>`;
+      } else {
+        return `<div class="iframe-container scaled-iframe-container"><iframe${preAttributes}src="${src}"${postAttributes}></iframe></div>`;
+      }
+    });
+    return md.render(processedContent);
   });
 
-  const slideContents = processedMarkdown.split(/^---s*$/m).map(content => md.render(content));
   slides.value = slideContents;
 };
 
@@ -53,6 +52,8 @@ const initializeReveal = async () => {
     deck = new Reveal(revealContainer.value, {
       autoAnimate: true,
       plugins: [Markdown],
+      viewDistance: 3,
+      mobileViewDistance: 3,
     });
     deck.initialize();
   }
@@ -86,11 +87,5 @@ onUnmounted(() => {
 <style>
 .reveal {
   height: 70vh;
-}
-
-@media (max-width: 768px) {
-  .reveal {
-    height: 40vh;
-  }
 }
 </style>
