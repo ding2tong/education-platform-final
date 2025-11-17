@@ -1,4 +1,5 @@
 import { createRouter, createWebHistory } from 'vue-router'
+import { useAuthStore } from '@/stores/auth'
 import MainLayout from '@/layouts/MainLayout.vue'
 import HomeView from '../views/HomeView.vue'
 
@@ -31,11 +32,13 @@ const router = createRouter({
         {
           path: 'dashboard',
           name: 'dashboard',
-          component: () => import('../views/DashboardView.vue')
+          component: () => import('../views/DashboardView.vue'),
+          meta: { requiresAuth: true }
         },
         {
           path: 'admin',
           component: () => import('../views/AdminView.vue'),
+          meta: { requiresAuth: true, requiresAdmin: true },
           children: [
             { path: '', redirect: '/admin/dashboard' },
             {
@@ -79,21 +82,41 @@ const router = createRouter({
         {
           path: 'courses/:courseId/lesson/:lessonId',
           name: 'lesson',
-          component: () => import('../views/LessonView.vue')
+          component: () => import('../views/LessonView.vue'),
+          meta: { requiresAuth: true }
         },
         {
           path: 'courses/:courseId/quiz',
           name: 'quiz',
-          component: () => import('../views/QuizView.vue')
+          component: () => import('../views/QuizView.vue'),
+          meta: { requiresAuth: true }
         },
         {
           path: 'quiz-result/:courseId',
           name: 'quiz-result',
-          component: () => import('../views/QuizResultView.vue')
+          component: () => import('../views/QuizResultView.vue'),
+          meta: { requiresAuth: true }
         }
       ]
     }
   ]
 })
+
+router.beforeEach((to, from, next) => {
+  const authStore = useAuthStore();
+  const requiresAuth = to.matched.some(record => record.meta.requiresAuth);
+  const requiresAdmin = to.matched.some(record => record.meta.requiresAdmin);
+
+  if (requiresAuth && !authStore.isLoggedIn) {
+    // Redirect to home if not logged in
+    next({ name: 'home' });
+  } else if (requiresAdmin && !authStore.isAdmin) {
+    // Redirect to home if not an admin
+    next({ name: 'home' });
+  } else {
+    // Otherwise, allow navigation
+    next();
+  }
+});
 
 export default router

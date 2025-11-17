@@ -53,19 +53,22 @@ export const useAuthStore = defineStore('auth', {
       this.studentList = students;
     },
     init() {
-      onAuthStateChanged(auth, async (user) => {
-        if (user) {
-          const userDoc = await getDoc(doc(db, 'users', user.uid));
-          if (userDoc.exists()) {
-            this.currentUser = { uid: user.uid, ...userDoc.data() };
-            if (this.currentUser.fullName) {
-              this.loadUserData();
+      return new Promise((resolve) => {
+        onAuthStateChanged(auth, async (user) => {
+          if (user) {
+            const userDoc = await getDoc(doc(db, 'users', user.uid));
+            if (userDoc.exists()) {
+              this.currentUser = { uid: user.uid, ...userDoc.data() };
+              if (this.currentUser.fullName) {
+                this.loadUserData();
+              }
             }
+          } else {
+            this.currentUser = null;
+            this.userProgress = {};
           }
-        } else {
-          this.currentUser = null;
-          this.userProgress = {};
-        }
+          resolve(); // Signal that the initial auth check is complete
+        });
       });
     },
     async loginWithGoogle() {
