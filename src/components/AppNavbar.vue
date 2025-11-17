@@ -125,5 +125,72 @@ const logout = () => {
 
 .hamburger {
   display: none;
+  cursor: pointer;
+  background: none;
+  border: none;
+  padding: 0;
+  z-index: 101;
+}
+
+/* Responsive Styles */
+@media (max-width: 768px) {
+  .nav-menu-wrapper {
+    display: none;
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100vh;
+    background-color: var(--color-surface);
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 24px 0;
+    box-shadow: var(--shadow-md);
+    transition: transform 0.3s ease-in-out;
+    transform: translateX(100%);
+  }
+
+  .nav-menu-wrapper.is-open {
+    display: flex;
+    transform: translateX(0);
+  }
+
+  .nav-menu {
+    flex-direction: column;
+    text-align: center;
+    gap: 32px;
+  }
+
+  .nav-link {
+    font-size: var(--font-size-xl);
+  }
+
+  .nav-actions {
+    margin-top: 32px;
+  }
+
+  .hamburger {
+    display: block;
+  }
+
+  .hamburger span {
+    display: block;
+    width: 25px;
+    height: 3px;
+    margin: 5px 0;
+    background-color: var(--color-text);
+    transition: all 0.3s ease-in-out;
+  }
+
+  .hamburger.is-active span:nth-child(1) {
+    transform: translateY(8px) rotate(45deg);
+  }
+  .hamburger.is-active span:nth-child(2) {
+    opacity: 0;
+  }
+  .hamburger.is-active span:nth-child(3) {
+    transform: translateY(-8px) rotate(-45deg);
+  }
 }
 </style>
