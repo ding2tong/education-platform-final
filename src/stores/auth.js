@@ -325,7 +325,7 @@ export const useAuthStore = defineStore('auth', {
         for (const course of allCourses) {
           const progress = studentProgress[course.id];
           if (progress) {
-            const courseDetails = await courseStore.fetchCourseDetails(course.id);
+            await courseStore.fetchCourseDetails(course.id);
             const totalLessons = courseStore.currentCourse?.lessons?.length || 0;
             const progressPercentage = totalLessons > 0 ? Math.round((progress.completedLessons.length / totalLessons) * 100) : 0;
             
