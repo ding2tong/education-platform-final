@@ -1,6 +1,6 @@
 <template>
   <div>
-    <h2>{{ isNewLesson ? '新增課程單元' : '編輯課程單元' }}</h2>
+    <h2>{{ pageTitle }}</h2>
     <form @submit.prevent="saveLesson">
       <div class="card" style="margin-top: 24px;">
         <div class="card__body">
@@ -55,9 +55,18 @@ const isNewLesson = computed(() => !lessonId);
 const lesson = ref({ title: '', description: '', content: '' });
 const error = ref('');
 
+const pageTitle = computed(() => {
+  const baseTitle = isNewLesson.value ? '新增課程單元' : '編輯課程單元';
+  const courseName = courseStore.currentCourse?.title;
+  return courseName ? `${baseTitle} ：${courseName}` : baseTitle;
+});
+
 onMounted(async () => {
+  // Fetch course details regardless of whether it's a new or existing lesson
+  // to ensure we have the course name for the title.
+  await courseStore.fetchCourseDetails(courseId);
+
   if (!isNewLesson.value) {
-    await courseStore.fetchCourseDetails(courseId);
     const lessonData = courseStore.currentCourse?.lessons?.find(l => l.id === lessonId);
     if (lessonData) {
       lesson.value = { ...lessonData };
