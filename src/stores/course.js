@@ -107,7 +107,7 @@ export const useCourseStore = defineStore('course', {
           // Update existing lesson
           const lessonRef = doc(lessonsCollectionRef, lessonData.id);
           const { id, ...dataToSave } = lessonData;
-          await updateDoc(lessonRef, dataToSave);
+          await setDoc(lessonRef, dataToSave, { merge: true });
         } else {
           // Add new lesson
           const newLessonRef = doc(lessonsCollectionRef);
