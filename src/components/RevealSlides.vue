@@ -95,9 +95,10 @@ watch(() => props.markdown, async (newMarkdown) => {
   }
 });
 
-onUnmounted(() => {
+const destroyDeck = () => {
   if (deck) {
     deck.destroy();
+    deck = null;
   }
   // Explicitly remove reveal-scroll class from body
   document.body.classList.remove('reveal-scroll');
@@ -107,6 +108,14 @@ onUnmounted(() => {
   if (scrollbar) {
     scrollbar.remove();
   }
+};
+
+onUnmounted(() => {
+  destroyDeck();
+});
+
+defineExpose({
+  destroyDeck
 });
 </script>
 

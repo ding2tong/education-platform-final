@@ -8,7 +8,7 @@
       <table class="table">
         <thead>
           <tr>
-            <th>課程標題</th>
+            <th>課程標題 (單元數)</th>
             <th>分類</th>
             <th>狀態</th>
             <th>操作</th>
@@ -16,7 +16,7 @@
         </thead>
         <tbody>
           <tr v-for="course in courseStore.courses" :key="course.id">
-            <td>{{ course.title }}</td>
+            <td>{{ course.title }} ({{ course.lessonsCount || 0 }})</td>
             <td>{{ course.category || 'N/A' }}</td>
             <td>
               <span :class="['status-badge', course.published ? 'status-published' : 'status-draft']">

@@ -13,12 +13,26 @@ export const useCourseStore = defineStore('course', {
   },
   actions: {
     async fetchAllCourses() {
+      const uiStore = useUiStore();
+      uiStore.setLoading(true);
       this.courses = [];
-      const coursesCollection = collection(db, 'courses');
-      const coursesSnapshot = await getDocs(coursesCollection);
-      coursesSnapshot.forEach((doc) => {
-        this.courses.push({ id: doc.id, ...doc.data() });
-      });
+      try {
+        const coursesCollection = collection(db, 'courses');
+        const coursesSnapshot = await getDocs(coursesCollection);
+        
+        const coursesWithCount = await Promise.all(coursesSnapshot.docs.map(async (doc) => {
+          const lessonsRef = collection(db, `courses/${doc.id}/lessons`);
+          const lessonsSnapshot = await getDocs(lessonsRef);
+          return { id: doc.id, ...doc.data(), lessonsCount: lessonsSnapshot.size };
+        }));
+
+        this.courses = coursesWithCount;
+      } catch (error) {
+        console.error("Error fetching courses with lesson count: ", error);
+        uiStore.setError('載入課程列表失敗。');
+      } finally {
+        uiStore.setLoading(false);
+      }
     },
     async fetchCourseDetails(courseId) {
       // Fetch main course doc

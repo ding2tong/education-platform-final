@@ -1,5 +1,5 @@
 <script setup>
-import { computed, onMounted } from 'vue'
+import { computed, onMounted, ref } from 'vue'
 import RevealSlides from '@/components/RevealSlides.vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useCourseStore } from '@/stores/course'
@@ -12,6 +12,7 @@ const authStore = useAuthStore()
 
 const courseId = route.params.courseId
 const lessonId = route.params.lessonId
+const revealSlidesRef = ref(null);
 
 onMounted(() => {
   // Ensure the course details, including lessons, are loaded
@@ -49,10 +50,16 @@ const startQuiz = (isLessonQuiz) => {
   }
   router.push({ name: 'quiz', params: params, query: query })
 }
+
+const onBeforeLeave = () => {
+  if (revealSlidesRef.value) {
+    revealSlidesRef.value.destroyDeck();
+  }
+};
 </script>
 
 <template>
-  <div class="page">
+  <div class="page" @before-leave="onBeforeLeave">
     <div class="container" v-if="lesson">
       <div class="lesson-header">
         <button
@@ -65,7 +72,7 @@ const startQuiz = (isLessonQuiz) => {
       </div>
       <div class="lesson-content-wrapper">
         <div class="aspect-ratio-container">
-          <RevealSlides :key="lessonId" :markdown="lesson.content" />
+          <RevealSlides ref="revealSlidesRef" :key="lessonId" :markdown="lesson.content" />
         </div>
         <div class="section-actions">
           <button class="btn btn--primary" @click="markComplete">標記為完成</button>
