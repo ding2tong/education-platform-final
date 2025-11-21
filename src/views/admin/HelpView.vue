@@ -13,7 +13,7 @@
 <script setup>
 import { ref, onMounted } from 'vue';
 import MarkdownIt from 'markdown-it';
-import guideContent from '../../TEACHER_GUIDE.md?raw';
+import guideContent from '@/assets/TEACHER_GUIDE.md?raw';
 
 const md = new MarkdownIt();
 const renderedMarkdown = ref('');
