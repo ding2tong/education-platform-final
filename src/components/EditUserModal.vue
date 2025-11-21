@@ -16,9 +16,9 @@
             <label class="form-label">所屬分店</label>
             <select class="form-control" v-model="profile.branch" required>
               <option disabled value="">請選擇分店</option>
-              <option>寧夏</option>
-              <option>三和</option>
-              <option>武昌</option>
+              <option v-for="branch in formOptions.branchOptions" :key="branch" :value="branch">
+                {{ branch }}
+              </option>
             </select>
           </div>
           <div class="error-message" v-if="error">{{ error }}</div>
@@ -32,10 +32,11 @@
 <script setup>
 import { ref, watch } from 'vue';
 import { useUiStore } from '@/stores/ui';
-import { useAuthStore } from '@/stores/auth';
+import { useAdminStore } from '@/stores/admin';
+import { formOptions } from '@/config/forms';
 
 const uiStore = useUiStore();
-const authStore = useAuthStore();
+const adminStore = useAdminStore();
 
 const profile = ref({ fullName: '', branch: '' });
 const error = ref('');
@@ -63,7 +64,7 @@ const updateProfile = async () => {
   }
 
   try {
-    await authStore.adminUpdateUserProfile(uiStore.editingUser.uid, profile.value);
+    await adminStore.adminUpdateUserProfile(uiStore.editingUser.uid, profile.value);
     closeModal();
   } catch (e) {
     error.value = '更新失敗，請稍後再試';

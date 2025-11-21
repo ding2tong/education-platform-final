@@ -15,24 +15,24 @@
 
 <script setup>
 import { ref, onMounted, computed } from 'vue';
-import { useAuthStore } from '@/stores/auth';
+import { useAdminStore } from '@/stores/admin';
 import { useCourseStore } from '@/stores/course';
 import AdminStudentCard from '@/components/AdminStudentCard.vue';
 
-const authStore = useAuthStore();
+const adminStore = useAdminStore();
 const courseStore = useCourseStore();
 const loading = ref(true);
 
 onMounted(async () => {
   loading.value = true;
-  await authStore.fetchAllStudents();
+  await adminStore.fetchAllStudents();
   // Fetch all courses so we can display course titles in the student card
   await courseStore.fetchAllCourses();
   loading.value = false;
 });
 
 const studentsByBranch = computed(() => {
-  return authStore.studentList.reduce((acc, student) => {
+  return adminStore.studentList.reduce((acc, student) => {
     const branch = student.branch || '未分類';
     if (!acc[branch]) {
       acc[branch] = [];

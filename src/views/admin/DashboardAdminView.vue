@@ -10,9 +10,9 @@
         <label for="branch-filter" class="form-label">分店</label>
         <select id="branch-filter" class="form-control" v-model="selectedBranch">
           <option value="">所有分店</option>
-          <option>寧夏</option>
-          <option>三和</option>
-          <option>武昌</option>
+          <option v-for="branch in formOptions.branchOptions" :key="branch" :value="branch">
+            {{ branch }}
+          </option>
         </select>
       </div>
       <div class="form-group">
@@ -63,10 +63,11 @@
 
 <script setup>
 import { ref, onMounted, computed } from 'vue';
-import { useAuthStore } from '@/stores/auth';
+import { useAdminStore } from '@/stores/admin';
 import { useCourseStore } from '@/stores/course';
+import { formOptions } from '@/config/forms';
 
-const authStore = useAuthStore();
+const adminStore = useAdminStore();
 const courseStore = useCourseStore();
 const allProgress = ref([]);
 const loading = ref(true);
@@ -76,14 +77,18 @@ const selectedCourse = ref('');
 onMounted(async () => {
   loading.value = true;
   await courseStore.fetchAllCourses();
-  allProgress.value = await authStore.fetchAllStudentProgress();
+  allProgress.value = await adminStore.fetchAllStudentProgress();
   loading.value = false;
 });
 
 const filteredProgress = computed(() => {
   return allProgress.value.filter(item => {
     const branchMatch = !selectedBranch.value || item.branch === selectedBranch.value;
-    const courseMatch = !selectedCourse.value || item.courseId === selectedCourse.value;
+    // The data from fetchAllStudentProgress has courseTitle, not courseId.
+    // Let's find the course id from the title or adjust the data structure.
+    // For now, let's match by title if a course is selected.
+    const selectedCourseTitle = selectedCourse.value ? courseStore.courses.find(c => c.id === selectedCourse.value)?.title : '';
+    const courseMatch = !selectedCourse.value || item.courseTitle === selectedCourseTitle;
     return branchMatch && courseMatch;
   });
 });

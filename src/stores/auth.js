@@ -29,29 +29,12 @@ export const useAuthStore = defineStore('auth', {
   state: () => ({
     currentUser: null,
     userProgress: {}, // Will hold progress per course, e.g., { courseId: { completedLessons: [] } }
-    studentList: [],
   }),
   getters: {
     isLoggedIn: (state) => !!state.currentUser,
     isAdmin: (state) => state.currentUser?.role === 'admin',
-    // Note: progressPercentage is now course-specific and should be calculated in the component
   },
   actions: {
-    async fetchAllStudents() {
-      if (!this.currentUser || this.currentUser.role !== 'admin') {
-        this.studentList = [];
-        return;
-      }
-      const usersCollection = collection(db, 'users');
-      const usersSnapshot = await getDocs(usersCollection);
-      const students = [];
-      usersSnapshot.forEach(doc => {
-        if (doc.data().role === 'student') {
-          students.push({ uid: doc.id, ...doc.data() });
-        }
-      });
-      this.studentList = students;
-    },
     init() {
       return new Promise((resolve) => {
         onAuthStateChanged(auth, async (user) => {
@@ -110,12 +93,6 @@ export const useAuthStore = defineStore('auth', {
       this.currentUser.fullName = profileData.fullName;
       this.currentUser.branch = profileData.branch;
       this.loadUserData();
-    },
-    async adminUpdateUserProfile(userId, profileData) {
-      if (!this.isAdmin) throw new Error('僅管理員可執行此操作');
-      const userDocRef = doc(db, 'users', userId);
-      await updateDoc(userDocRef, { fullName: profileData.fullName, branch: profileData.branch });
-      await this.fetchAllStudents();
     },
     async logout() {
       await signOut(auth);
@@ -223,128 +200,5 @@ export const useAuthStore = defineStore('auth', {
       // Reload user data to make the new result available immediately
       await this.loadUserData();
     },
-    // Admin functions - temporarily hardcoded for a single course view
-    async getStudentProgress(userId) {
-      const courseId = 'sleep-health-course'; // Hardcoded for now
-      const courseStore = useCourseStore();
-      await courseStore.fetchCourseDetails(courseId);
-      const course = courseStore.currentCourse;
-
-      const progressDoc = await getDoc(doc(db, `users/${userId}/progress`, courseId));
-      if (progressDoc.exists() && course && course.lessons) {
-        const progress = progressDoc.data();
-        return Math.round((progress.completedLessons.length / course.lessons.length) * 100);
-      }
-      return 0;
-    },
-    async getStudentCompletedCount(userId) {
-      const courseId = 'sleep-health-course'; // Hardcoded for now
-      const progressDoc = await getDoc(doc(db, `users/${userId}/progress`, courseId));
-      if (progressDoc.exists()) {
-        return progressDoc.data().completedLessons.length;
-      }
-      return 0;
-    },
-    async getStudentQuizCount(userId) {
-      const courseId = 'sleep-health-course'; // Hardcoded for now
-      const q = query(collection(db, `users/${userId}/quizResults`), where("courseId", "==", courseId));
-      const quizResultsSnapshot = await getDocs(q);
-      return quizResultsSnapshot.size;
-    },
-    async getStudentAvgScore(userId) {
-      const courseId = 'sleep-health-course'; // Hardcoded for now
-      const q = query(collection(db, `users/${userId}/quizResults`), where("courseId", "==", courseId));
-      const quizResultsSnapshot = await getDocs(q);
-      if (quizResultsSnapshot.empty) return 0;
-      const sum = quizResultsSnapshot.docs.reduce((acc, r) => acc + r.data().score, 0);
-      return Math.round(sum / quizResultsSnapshot.size);
-    },
-
-    async fetchStudentProgressData(userId) {
-      if (!this.isAdmin) return {};
-
-      const progressCollectionRef = collection(db, `users/${userId}/progress`);
-      const progressSnapshot = await getDocs(progressCollectionRef);
-      const progressData = {};
-      progressSnapshot.forEach(doc => {
-        progressData[doc.id] = { completedLessons: doc.data().completedLessons || [] };
-      });
-
-      const quizResultsRef = collection(db, `users/${userId}/quizResults`);
-      const quizResultsSnapshot = await getDocs(quizResultsRef);
-      quizResultsSnapshot.forEach(doc => {
-        const result = doc.data();
-        if (progressData[result.courseId]) {
-          if (!progressData[result.courseId].quizResults) {
-            progressData[result.courseId].quizResults = [];
-          }
-          progressData[result.courseId].quizResults.push(result);
-        } else {
-          progressData[result.courseId] = { completedLessons: [], quizResults: [result] };
-        }
-      });
-
-      return progressData;
-    },
-
-    async fetchAllStudentProgress() {
-      if (!this.isAdmin) return [];
-
-      const courseStore = useCourseStore();
-      await courseStore.fetchAllCourses();
-      const allCourses = courseStore.courses;
-
-      await this.fetchAllStudents();
-      const allStudents = this.studentList;
-
-      const allProgressData = [];
-
-      for (const student of allStudents) {
-        const progressCollectionRef = collection(db, `users/${student.uid}/progress`);
-        const progressSnapshot = await getDocs(progressCollectionRef);
-        const studentProgress = {};
-        progressSnapshot.forEach(doc => {
-          studentProgress[doc.id] = { completedLessons: doc.data().completedLessons || [] };
-        });
-
-        const quizResultsRef = collection(db, `users/${student.uid}/quizResults`);
-        const quizResultsSnapshot = await getDocs(quizResultsRef);
-        quizResultsSnapshot.forEach(doc => {
-          const result = doc.data();
-          if (studentProgress[result.courseId]) {
-            if (!studentProgress[result.courseId].quizResults) {
-              studentProgress[result.courseId].quizResults = [];
-            }
-            studentProgress[result.courseId].quizResults.push(result);
-          } else {
-            studentProgress[result.courseId] = { completedLessons: [], quizResults: [result] };
-          }
-        });
-
-        // Now, create a flat entry for each course the student has interacted with
-        for (const course of allCourses) {
-          const progress = studentProgress[course.id];
-          if (progress) {
-            await courseStore.fetchCourseDetails(course.id);
-            const totalLessons = courseStore.currentCourse?.lessons?.length || 0;
-            const progressPercentage = totalLessons > 0 ? Math.round((progress.completedLessons.length / totalLessons) * 100) : 0;
-            
-            const courseQuizzes = progress.quizResults?.filter(r => !r.lessonId) || [];
-            const latestScore = courseQuizzes.length > 0 ? courseQuizzes[courseQuizzes.length - 1].score : null;
-
-            allProgressData.push({
-              branch: student.branch,
-              fullName: student.fullName,
-              courseTitle: course.title,
-              progressPercentage: progressPercentage,
-              latestScore: latestScore,
-              quizAttempts: courseQuizzes.length,
-              registeredAt: student.createdAt,
-            });
-          }
-        }
-      }
-      return allProgressData;
-    }
   }
 })

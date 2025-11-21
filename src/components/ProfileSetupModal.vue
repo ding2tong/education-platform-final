@@ -15,9 +15,9 @@
             <label class="form-label">所屬分店</label>
             <select class="form-control" v-model="profile.branch" required>
               <option disabled value="">請選擇分店</option>
-              <option>寧夏</option>
-              <option>三和</option>
-              <option>武昌</option>
+              <option v-for="branch in formOptions.branchOptions" :key="branch" :value="branch">
+                {{ branch }}
+              </option>
             </select>
           </div>
           <div class="error-message" v-if="error">{{ error }}</div>
@@ -32,6 +32,7 @@
 import { ref } from 'vue';
 import { useUiStore } from '@/stores/ui';
 import { useAuthStore } from '@/stores/auth';
+import { formOptions } from '@/config/forms';
 
 const uiStore = useUiStore();
 const authStore = useAuthStore();
@@ -59,5 +60,4 @@ const updateProfile = async () => {
   }
 };
 </script>
-
 
