@@ -1,6 +1,7 @@
 import { defineStore } from 'pinia'
 import { db } from '@/plugins/firebase'
 import { getDocs, collection, doc, getDoc, updateDoc, addDoc, deleteDoc, setDoc, writeBatch } from 'firebase/firestore'
+import { useUiStore } from './ui'
 
 export const useCourseStore = defineStore('course', {
   state: () => ({
@@ -42,6 +43,8 @@ export const useCourseStore = defineStore('course', {
       this.currentCourse = { ...courseData, lessons, quiz };
     },
     async saveCourse(courseData) {
+      const uiStore = useUiStore();
+      uiStore.setLoading(true);
       try {
         if (courseData.id) {
           // Update existing course
@@ -55,7 +58,9 @@ export const useCourseStore = defineStore('course', {
         await this.fetchAllCourses(); // Refresh the list
       } catch (error) {
         console.error("Error saving course: ", error);
-        throw error; // Re-throw to be caught in the component
+        uiStore.setError('儲存課程失敗，請稍後再試。');
+      } finally {
+        uiStore.setLoading(false);
       }
     },
     async deleteCourse(courseId) {

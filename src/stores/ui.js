@@ -5,6 +5,8 @@ export const useUiStore = defineStore('ui', {
     showProfileSetupModal: false,
     showEditUserModal: false,
     editingUser: null, // To hold the user object being edited by the admin
+    isLoading: false,
+    globalError: null, // Can be a string or an object
   }),
   actions: {
     openProfileSetupModal() {
@@ -20,6 +22,19 @@ export const useUiStore = defineStore('ui', {
     closeEditUserModal() {
       this.showEditUserModal = false;
       this.editingUser = null;
+    },
+    setLoading(status) {
+      this.isLoading = status;
+    },
+    setError(message) {
+      this.globalError = message;
+      // Automatically clear the error after a few seconds
+      setTimeout(() => {
+        this.clearError();
+      }, 5000);
+    },
+    clearError() {
+      this.globalError = null;
     },
   },
 })
