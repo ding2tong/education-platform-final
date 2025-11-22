@@ -115,8 +115,14 @@ onMounted(async () => {
 
 const saveCourse = async () => {
   try {
-    await courseStore.saveCourse(course.value);
-    router.push({ name: 'admin-courses' });
+    const savedCourseId = await courseStore.saveCourse(course.value);
+    if (isNewCourse.value && savedCourseId) {
+      // If it's a new course, redirect to the new edit page
+      router.push({ name: 'admin-course-edit', params: { id: savedCourseId } });
+    } else {
+      // If updating an existing course, go back to the list
+      router.push({ name: 'admin-courses' });
+    }
   } catch (error) {
     alert('儲存課程失敗，請查看 console。');
   }

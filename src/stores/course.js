@@ -97,18 +97,22 @@ export const useCourseStore = defineStore('course', {
           const courseRef = doc(db, 'courses', courseData.id);
           const { id, ...dataToSave } = courseData; // Don't save the id inside the document
           await updateDoc(courseRef, dataToSave);
+          await this.fetchAllCourses(); // Refresh the list
+          return courseData.id;
         } else {
           // Create new course, add createdAt and a default order
-          await addDoc(collection(db, 'courses'), { 
+          const newCourseRef = await addDoc(collection(db, 'courses'), { 
             ...courseData, 
             createdAt: new Date().toISOString(),
             order: 0 // Default order to appear at the top
           });
+          await this.fetchAllCourses(); // Refresh the list
+          return newCourseRef.id; // Return the new ID
         }
-        await this.fetchAllCourses(); // Refresh the list
       } catch (error) {
         console.error("Error saving course: ", error);
         uiStore.setError('儲存課程失敗，請稍後再試。');
+        return null;
       } finally {
         uiStore.setLoading(false);
       }
@@ -121,10 +125,25 @@ export const useCourseStore = defineStore('course', {
         orderedCourses.forEach((course, index) => {
           const courseRef = doc(db, 'courses', course.id);
           batch.update(courseRef, { order: index });
+
+          // Optimistically update the local state
+          const courseInState = this.courses.find(c => c.id === course.id);
+          if (courseInState) {
+            courseInState.order = index;
+          }
         });
         await batch.commit();
-        // No need to fetchAllCourses here, as the local state is already updated by draggable
-        // and we want to avoid a jarring refresh.
+        
+        // Re-sort the local array to be safe, ensuring consistency
+        this.courses.sort((a, b) => {
+          const orderA = a.order ?? Infinity;
+          const orderB = b.order ?? Infinity;
+          if (orderA !== orderB) {
+            return orderA - orderB;
+          }
+          return new Date(b.createdAt) - new Date(a.createdAt);
+        });
+
       } catch (error) {
         console.error("Error updating course order: ", error);
         uiStore.setError('更新課程順序失敗。');

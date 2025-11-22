@@ -23,7 +23,7 @@
 
 <script setup>
 import { ref } from 'vue';
-import { useAuthStore } from '@/stores/auth';
+import { useAdminStore } from '@/stores/admin';
 import { useCourseStore } from '@/stores/course';
 
 const props = defineProps({
@@ -33,7 +33,7 @@ const props = defineProps({
   },
 });
 
-const authStore = useAuthStore();
+const adminStore = useAdminStore();
 const courseStore = useCourseStore();
 
 const isExpanded = ref(false);
@@ -44,8 +44,7 @@ const toggleExpand = async () => {
   isExpanded.value = !isExpanded.value;
   if (isExpanded.value && Object.keys(progressData.value).length === 0) {
     loading.value = true;
-    // This action needs to be created
-    progressData.value = await authStore.fetchStudentProgressData(props.student.uid);
+    progressData.value = await adminStore.fetchStudentProgressData(props.student.uid);
     loading.value = false;
   }
 };
@@ -55,9 +54,9 @@ const getCourseById = (courseId) => {
 };
 
 const calculateProgress = (progress, course) => {
-  if (!course || !course.lessons || course.lessons.length === 0) return 0;
+  if (!course || !course.lessonsCount || course.lessonsCount === 0) return 0;
   const completedCount = progress.completedLessons?.length || 0;
-  return Math.round((completedCount / course.lessons.length) * 100);
+  return Math.round((completedCount / course.lessonsCount) * 100);
 };
 </script>
 
