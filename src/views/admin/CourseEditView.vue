@@ -19,6 +19,7 @@
                 <option disabled value="">請選擇分類</option>
                 <option>教育訓練</option>
                 <option>商品教育</option>
+                <option>IG/電子報</option>
               </select>
             </div>
             <div class="form-group">

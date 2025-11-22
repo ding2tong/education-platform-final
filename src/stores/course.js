@@ -67,7 +67,7 @@ export const useCourseStore = defineStore('course', {
           await updateDoc(courseRef, dataToSave);
         } else {
           // Create new course
-          await addDoc(collection(db, 'courses'), courseData);
+          await addDoc(collection(db, 'courses'), { ...courseData, createdAt: new Date().toISOString() });
         }
         await this.fetchAllCourses(); // Refresh the list
       } catch (error) {
