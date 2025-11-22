@@ -7,11 +7,32 @@ export const useCourseStore = defineStore('course', {
   state: () => ({
     courses: [], // To hold the list of all courses
     currentCourse: null, // To hold the currently selected course, its lessons, and quiz
+    categories: [], // To hold the order of categories
   }),
   getters: {
     // ... getters can be added later as needed
   },
   actions: {
+    async fetchCategories() {
+      const configRef = doc(db, 'config', 'courseSettings');
+      const configSnap = await getDoc(configRef);
+      if (configSnap.exists() && configSnap.data().categories) {
+        this.categories = configSnap.data().categories;
+      } else {
+        // Fallback to a default order if not set in DB
+        this.categories = ['教育訓練', '商品教育', 'IG/電子報'];
+      }
+    },
+    async updateCategoriesOrder(newOrder) {
+      this.categories = newOrder; // Optimistic update
+      const configRef = doc(db, 'config', 'courseSettings');
+      try {
+        await setDoc(configRef, { categories: newOrder }, { merge: true });
+      } catch (error) {
+        console.error("Error updating categories order: ", error);
+        // Revert on error if needed, though optimistic update is usually fine here.
+      }
+    },
     async fetchAllCourses() {
       const uiStore = useUiStore();
       uiStore.setLoading(true);
@@ -20,11 +41,22 @@ export const useCourseStore = defineStore('course', {
         const coursesCollection = collection(db, 'courses');
         const coursesSnapshot = await getDocs(coursesCollection);
         
-        const coursesWithCount = await Promise.all(coursesSnapshot.docs.map(async (doc) => {
+        let coursesWithCount = await Promise.all(coursesSnapshot.docs.map(async (doc) => {
           const lessonsRef = collection(db, `courses/${doc.id}/lessons`);
           const lessonsSnapshot = await getDocs(lessonsRef);
           return { id: doc.id, ...doc.data(), lessonsCount: lessonsSnapshot.size };
         }));
+
+        // Unified sorting logic
+        coursesWithCount.sort((a, b) => {
+          const orderA = a.order ?? Infinity;
+          const orderB = b.order ?? Infinity;
+          if (orderA !== orderB) {
+            return orderA - orderB;
+          }
+          // If order is the same, newest first
+          return new Date(b.createdAt) - new Date(a.createdAt);
+        });
 
         this.courses = coursesWithCount;
       } catch (error) {
@@ -66,13 +98,38 @@ export const useCourseStore = defineStore('course', {
           const { id, ...dataToSave } = courseData; // Don't save the id inside the document
           await updateDoc(courseRef, dataToSave);
         } else {
-          // Create new course
-          await addDoc(collection(db, 'courses'), { ...courseData, createdAt: new Date().toISOString() });
+          // Create new course, add createdAt and a default order
+          await addDoc(collection(db, 'courses'), { 
+            ...courseData, 
+            createdAt: new Date().toISOString(),
+            order: 0 // Default order to appear at the top
+          });
         }
         await this.fetchAllCourses(); // Refresh the list
       } catch (error) {
         console.error("Error saving course: ", error);
         uiStore.setError('儲存課程失敗，請稍後再試。');
+      } finally {
+        uiStore.setLoading(false);
+      }
+    },
+    async updateCourseOrder(orderedCourses) {
+      const uiStore = useUiStore();
+      uiStore.setLoading(true);
+      try {
+        const batch = writeBatch(db);
+        orderedCourses.forEach((course, index) => {
+          const courseRef = doc(db, 'courses', course.id);
+          batch.update(courseRef, { order: index });
+        });
+        await batch.commit();
+        // No need to fetchAllCourses here, as the local state is already updated by draggable
+        // and we want to avoid a jarring refresh.
+      } catch (error) {
+        console.error("Error updating course order: ", error);
+        uiStore.setError('更新課程順序失敗。');
+        // If the update fails, refresh from DB to revert changes
+        await this.fetchAllCourses();
       } finally {
         uiStore.setLoading(false);
       }

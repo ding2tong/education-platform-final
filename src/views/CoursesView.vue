@@ -45,20 +45,19 @@
 import { onMounted, computed, ref } from 'vue';
 import { useCourseStore } from '@/stores/course';
 import { useRouter } from 'vue-router';
+import { storeToRefs } from 'pinia';
 
 const courseStore = useCourseStore();
 const router = useRouter();
+
+const { categories: availableCategories } = storeToRefs(courseStore);
 
 const searchQuery = ref('');
 const selectedCategory = ref('');
 
 onMounted(() => {
   courseStore.fetchAllCourses();
-});
-
-const availableCategories = computed(() => {
-  const categories = new Set(courseStore.courses.map(c => c.category).filter(Boolean));
-  return Array.from(categories);
+  courseStore.fetchCategories();
 });
 
 const groupedCourses = computed(() => {
@@ -79,15 +78,22 @@ const groupedCourses = computed(() => {
     );
   }
 
-  // 4. Group the final list
-  return filteredCourses.reduce((acc, course) => {
-    const category = course.category || '未分類';
-    if (!acc[category]) {
-      acc[category] = [];
+  // 4. Group the final list, respecting the order from the store
+  const grouped = {};
+  availableCategories.value.forEach(category => {
+    const coursesInCategory = filteredCourses.filter(c => c.category === category);
+    if (coursesInCategory.length > 0) {
+      grouped[category] = coursesInCategory;
     }
-    acc[category].push(course);
-    return acc;
-  }, {});
+  });
+
+  // Add 'Uncategorized' if any exist
+  const uncategorized = filteredCourses.filter(c => !c.category || !availableCategories.value.includes(c.category));
+  if (uncategorized.length > 0) {
+    grouped['未分類'] = uncategorized;
+  }
+
+  return grouped;
 });
 
 const viewCourse = (courseId) => {
