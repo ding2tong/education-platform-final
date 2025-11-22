@@ -28,7 +28,7 @@ import { useUiStore } from './ui';
 export const useAuthStore = defineStore('auth', {
   state: () => ({
     currentUser: null,
-    userProgress: {}, // Will hold progress per course, e.g., { courseId: { completedLessons: [] } }
+    userProgress: null, // Will hold progress per course, e.g., { courseId: { completedLessons: [] } }
   }),
   getters: {
     isLoggedIn: (state) => !!state.currentUser,
@@ -43,12 +43,12 @@ export const useAuthStore = defineStore('auth', {
             if (userDoc.exists()) {
               this.currentUser = { uid: user.uid, ...userDoc.data() };
               if (this.currentUser.fullName) {
-                this.loadUserData();
+                this.fetchUserProgress();
               }
             }
           } else {
             this.currentUser = null;
-            this.userProgress = {};
+            this.userProgress = null;
           }
           resolve(); // Signal that the initial auth check is complete
         });
@@ -79,7 +79,7 @@ export const useAuthStore = defineStore('auth', {
         if (!this.currentUser.fullName) {
           uiStore.openProfileSetupModal();
         } else {
-          this.loadUserData();
+          this.fetchUserProgress();
         }
       }
     },
@@ -92,12 +92,14 @@ export const useAuthStore = defineStore('auth', {
       });
       this.currentUser.fullName = profileData.fullName;
       this.currentUser.branch = profileData.branch;
-      this.loadUserData();
+      this.fetchUserProgress();
     },
     async logout() {
       await signOut(auth);
+      this.currentUser = null;
+      this.userProgress = null;
     },
-    async loadUserData() {
+    async fetchUserProgress() {
       if (!this.currentUser) return;
       const baseProgressRef = collection(db, `users/${this.currentUser.uid}/progress`);
       const progressSnapshot = await getDocs(baseProgressRef);
@@ -198,7 +200,7 @@ export const useAuthStore = defineStore('auth', {
       }
 
       // Reload user data to make the new result available immediately
-      await this.loadUserData();
+      await this.fetchUserProgress();
     },
   }
 })
