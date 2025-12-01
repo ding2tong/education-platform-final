@@ -1,6 +1,6 @@
 import { defineStore } from 'pinia'
 import { db } from '@/plugins/firebase'
-import { getDocs, collection, doc, getDoc, updateDoc, addDoc, deleteDoc, setDoc, writeBatch } from 'firebase/firestore'
+import { getDocs, collection, doc, getDoc, updateDoc, addDoc, deleteDoc, setDoc, writeBatch, query, where } from 'firebase/firestore'
 import { useUiStore } from './ui'
 
 export const useCourseStore = defineStore('course', {
