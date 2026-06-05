@@ -1,34 +1,99 @@
 <template>
-  <div class="page">
-    <div class="container">
-      <h1>管理後台</h1>
-      <div class="admin-nav">
-        <router-link to="/admin/dashboard" class="admin-nav-link">總覽儀表板</router-link>
-        <router-link to="/admin/courses" class="admin-nav-link">課程管理</router-link>
-        <router-link to="/admin/students" class="admin-nav-link">學員清單管理</router-link>
+  <div class="admin-container">
+    <header class="admin-header">
+      <h1 class="admin-title">管理中心</h1>
+      <p class="admin-subtitle">管理學員、課程與系統設定</p>
+    </header>
+
+    <div class="admin-tabs-container">
+      <div class="admin-tabs card">
+        <router-link to="/admin/dashboard" class="tab-btn">
+          學員進度總覽
+        </router-link>
+        <router-link to="/admin/courses" class="tab-btn">
+          課程教材管理
+        </router-link>
       </div>
-      <div class="admin-content">
-        <router-view />
-      </div>
+    </div>
+
+    <div class="admin-view-content">
+      <router-view v-slot="{ Component }">
+        <transition name="fade" mode="out-in">
+          <component :is="Component" />
+        </transition>
+      </router-view>
     </div>
   </div>
 </template>
 
+<script setup>
+// No logic needed for this layout component
+</script>
+
 <style scoped>
-.admin-nav {
+.admin-container {
   display: flex;
-  border-bottom: 1px solid var(--color-border);
-  margin-bottom: 24px;
+  flex-direction: column;
+  gap: var(--space-24);
 }
-.admin-nav-link {
-  padding: 12px 16px;
+
+.admin-title {
+  font-size: var(--font-size-3xl);
+  font-weight: var(--font-weight-bold);
+  margin-bottom: 8px;
+  color: var(--color-text);
+}
+
+.admin-subtitle {
+  color: var(--color-text-secondary);
+}
+
+.admin-tabs-container {
+  display: flex;
+  margin-bottom: var(--space-16);
+}
+
+.admin-tabs {
+  display: flex;
+  padding: 6px;
+  background-color: var(--color-secondary);
+  border-radius: var(--radius-full);
+  box-shadow: var(--shadow-sm);
+}
+
+.tab-btn {
+  padding: 10px 24px;
+  border-radius: var(--radius-full);
   text-decoration: none;
   color: var(--color-text-secondary);
-  border-bottom: 2px solid transparent;
-  margin-bottom: -1px;
+  font-weight: var(--font-weight-medium);
+  transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+  white-space: nowrap;
 }
-.admin-nav-link.router-link-exact-active {
+
+.tab-btn.router-link-active {
+  background-color: white;
   color: var(--color-primary);
-  border-bottom-color: var(--color-primary);
+  box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+  font-weight: var(--font-weight-bold);
+  transform: scale(1.05);
+}
+
+.admin-view-content {
+  margin-top: var(--space-16);
+}
+
+.fade-enter-active, .fade-leave-active {
+  transition: opacity 0.3s ease;
+}
+.fade-enter-from, .fade-leave-to {
+  opacity: 0;
+}
+
+@media (max-width: 600px) {
+  .admin-tabs {
+    width: 100%;
+    justify-content: center;
+  }
 }
 </style>

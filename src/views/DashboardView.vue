@@ -1,77 +1,97 @@
 <template>
-  <div class="page">
-    <div class="container">
-      <h1>我的儀表板</h1>
+  <div class="dashboard-container">
+    <header class="page-header">
+      <h1 class="page-title">學習中心</h1>
+      <p class="page-subtitle">歡迎回來，{{ authStore.currentUser?.displayName }}！繼續您的學習進度吧。</p>
+    </header>
 
-      <div v-if="!hasStartedAnyCourse" class="empty-state">
-        <p class="empty-state-icon">🚀</p>
-        <p class="empty-state-text">您尚未開始任何課程，開始學習吧！</p>
-        <router-link :to="{ name: 'courses' }" class="btn btn--primary">瀏覽所有課程</router-link>
-      </div>
+    <div v-if="!hasStartedAnyCourse" class="empty-state card">
+      <div class="empty-dot"></div>
+      <h3>尚未開始任何課程</h3>
+      <p>挑選一個感興趣的主題，開始您的專業成長吧！</p>
+      <router-link :to="{ name: 'courses' }" class="btn btn--primary mt-4">瀏覽所有課程</router-link>
+    </div>
 
-      <div v-else>
-        <!-- Graphical Dashboard -->
-        <div class="dashboard-grid">
-          <div class="stats-column">
-            <div class="card stat-card">
-              <div class="card__body">
-                <h4>總完成課程</h4>
-                <p class="stat-number">{{ completedCoursesCount }} / {{ totalTrackedCourses }}</p>
-              </div>
-            </div>
-            <div class="card stat-card">
-              <div class="card__body">
-                <h4>總完成率</h4>
-                <p class="stat-number">{{ overallCompletionPercentage }}%</p>
-              </div>
-            </div>
+    <div v-else class="dashboard-content">
+      <!-- Top Stats Grid -->
+      <div class="stats-overview">
+        <div class="stat-main card">
+          <div class="stat-header">
+            <h3>總體進度</h3>
+            <span class="stat-percent">{{ overallCompletionPercentage }}%</span>
           </div>
-          <div class="card chart-card chart-card--doughnut">
-            <div class="card__body">
-              <h3>學習進度概覽</h3>
-              <div class="doughnut-container">
-                <Doughnut v-if="doughnutChartData.datasets[0].data.length > 0" :data="doughnutChartData" :options="chartOptions" />
-              </div>
-            </div>
+          <div class="stat-progress-track">
+            <div class="stat-progress-fill" :style="{ width: overallCompletionPercentage + '%' }"></div>
+          </div>
+          <div class="stat-footer">
+            <span>已完成 {{ completedCoursesCount }} 門課程</span>
+            <span>共追蹤 {{ totalTrackedCourses }} 門</span>
           </div>
         </div>
 
-        <!-- Detailed Progress List -->
-        <div class="detailed-progress">
-          <h2 class="section-title">詳細學習紀錄</h2>
-          <div class="progress-list">
-            <div v-for="course in trackedCourses" :key="course.id" class="progress-item-card">
-              <div class="progress-item-header" @click="toggleExpand(course.id)">
-                <div class="course-title">
-                  <h3>{{ course.title }}</h3>
-                  <span v-if="getLatestCourseQuizScore(authStore.userProgress[course.id])" class="score-badge">
-                    總測驗: {{ getLatestCourseQuizScore(authStore.userProgress[course.id]) }} 分
+        <div class="stat-chart card">
+          <h3>課程狀態</h3>
+          <div class="chart-wrapper">
+            <Doughnut v-if="doughnutChartData.datasets[0].data.length > 0" :data="doughnutChartData" :options="chartOptions" />
+          </div>
+        </div>
+      </div>
+
+      <!-- Detailed Progress -->
+      <section class="progress-section">
+        <h2 class="section-title">我的課程進度</h2>
+        <div class="progress-grid">
+          <div 
+            v-for="course in trackedCourses" 
+            :key="course.id" 
+            class="progress-card card" 
+            :class="{ expanded: expandedCourseId === course.id }"
+          >
+            <div class="progress-card-header" @click="toggleExpand(course.id)">
+              <div class="course-info">
+                <h3 class="course-name">{{ course.title }}</h3>
+                <div class="score-pills">
+                  <span v-if="getLatestCourseQuizScore(authStore.userProgress[course.id])" class="score-pill">
+                    總測驗: {{ getLatestCourseQuizScore(authStore.userProgress[course.id]) }}
                   </span>
                 </div>
-                <div class="progress-bar-container">
-                  <div class="progress-bar" :style="{ width: calculateProgress(authStore.userProgress[course.id], course) + '%' }">
-                    {{ calculateProgress(authStore.userProgress[course.id], course) }}%
+              </div>
+              <div class="progress-indicator">
+                <div class="circular-progress">
+                  {{ calculateProgress(authStore.userProgress[course.id], course) }}%
+                </div>
+                <div class="expand-icon">{{ expandedCourseId === course.id ? '−' : '+' }}</div>
+              </div>
+            </div>
+            
+            <transition name="expand">
+              <div v-if="expandedCourseId === course.id" class="progress-details">
+                <div class="details-divider"></div>
+                <h4 class="details-title">單元詳情</h4>
+                <div class="lessons-list">
+                  <div v-for="lesson in course.lessons" :key="lesson.id" class="lesson-row">
+                    <div class="lesson-status">
+                      <span class="status-dot" :class="{ completed: isLessonCompleted(course.id, lesson.id) }"></span>
+                      <span class="lesson-name">{{ lesson.title }}</span>
+                    </div>
+                    <div class="lesson-meta">
+                      <span v-if="getLatestLessonQuizScore(authStore.userProgress[course.id], lesson.id)" class="score-badge">
+                        {{ getLatestLessonQuizScore(authStore.userProgress[course.id], lesson.id) }} 分
+                      </span>
+                      <router-link 
+                        :to="{ name: 'lesson', params: { courseId: course.id, lessonId: lesson.id } }" 
+                        class="lesson-link"
+                      >
+                        {{ isLessonCompleted(course.id, lesson.id) ? '複習' : '開始' }}
+                      </router-link>
+                    </div>
                   </div>
                 </div>
               </div>
-              <div v-if="expandedCourseId === course.id" class="progress-item-details">
-                <h4>單元詳情</h4>
-                <ul>
-                  <li v-for="lesson in course.lessons" :key="lesson.id" class="lesson-detail-item">
-                    <span>
-                      <span class="completion-status" :class="{ completed: isLessonCompleted(course.id, lesson.id) }">✓</span>
-                      {{ lesson.title }}
-                    </span>
-                    <span v-if="getLatestLessonQuizScore(authStore.userProgress[course.id], lesson.id)" class="score-badge score-badge--secondary">
-                      單元測驗: {{ getLatestLessonQuizScore(authStore.userProgress[course.id], lesson.id) }} 分
-                    </span>
-                  </li>
-                </ul>
-              </div>
-            </div>
+            </transition>
           </div>
         </div>
-      </div>
+      </section>
     </div>
   </div>
 </template>
@@ -80,16 +100,15 @@
 import { onMounted, computed, ref } from 'vue';
 import { useAuthStore } from '@/stores/auth';
 import { useCourseStore } from '@/stores/course';
-import { Doughnut } from 'vue-chartjs'; // Bar removed
-import { Chart as ChartJS, Title, Tooltip, Legend, ArcElement } from 'chart.js'; // BarElement, CategoryScale, LinearScale removed
+import { Doughnut } from 'vue-chartjs';
+import { Chart as ChartJS, Title, Tooltip, Legend, ArcElement } from 'chart.js';
 
-ChartJS.register(Title, Tooltip, Legend, ArcElement); // Only register needed elements
+ChartJS.register(Title, Tooltip, Legend, ArcElement);
 
 const authStore = useAuthStore();
 const courseStore = useCourseStore();
 const expandedCourseId = ref(null);
 
-// --- Lifecycle ---
 onMounted(async () => {
   if (Object.keys(authStore.userProgress).length === 0) {
     await authStore.loadUserData();
@@ -99,7 +118,6 @@ onMounted(async () => {
   }
 });
 
-// --- Computed Properties for Dashboard ---
 const hasStartedAnyCourse = computed(() => Object.keys(authStore.userProgress).length > 0);
 
 const trackedCourses = computed(() => {
@@ -129,14 +147,19 @@ const overallCompletionPercentage = computed(() => {
   return Math.round((completedLessons / totalLessons) * 100);
 });
 
-// averageScore and barChartData are no longer needed
-// const averageScore = computed(() => { ... });
-// const barChartData = computed(() => { ... });
-
-// --- Chart Configurations ---
 const chartOptions = {
   responsive: true,
   maintainAspectRatio: false,
+  plugins: {
+    legend: {
+      position: 'bottom',
+      labels: {
+        usePointStyle: true,
+        padding: 20
+      }
+    }
+  },
+  cutout: '70%'
 };
 
 const doughnutChartData = computed(() => {
@@ -144,11 +167,15 @@ const doughnutChartData = computed(() => {
   const inProgress = totalTrackedCourses.value - completed;
   return {
     labels: ['已完成', '進行中'],
-    datasets: [{ backgroundColor: ['#33a6b8', '#e0e0e0'], data: [completed, inProgress] }],
+    datasets: [{ 
+      backgroundColor: ['#4F46E5', '#EFEFFC'], 
+      data: [completed, inProgress], 
+      borderWidth: 0,
+      hoverOffset: 4
+    }],
   };
 });
 
-// --- Methods for Detailed List ---
 const toggleExpand = (courseId) => {
   expandedCourseId.value = expandedCourseId.value === courseId ? null : courseId;
 };
@@ -176,169 +203,288 @@ const isLessonCompleted = (courseId, lessonId) => {
 </script>
 
 <style scoped>
-/* --- Dashboard Grid Styles --- */
-.dashboard-grid {
-  display: grid;
-  grid-template-columns: 1fr 2fr; /* Two columns: stats and doughnut */
-  gap: 24px;
-  /* align-items: start; */ /* Removed to allow stretching */
-  margin-bottom: 48px;
+.dashboard-container {
+  max-width: var(--container-lg);
+  margin: 0 auto;
 }
 
-.stats-column {
-  display: flex;
-  flex-direction: column;
-  gap: 24px;
-  height: 100%; /* Ensure it takes full height of grid cell */
-  justify-content: space-between; /* Distribute children evenly */
+.page-header {
+  margin-bottom: var(--space-32);
 }
 
-.stat-card h4 {
-  color: var(--color-text-secondary);
-  font-weight: var(--font-weight-medium);
-  margin-bottom: 8px;
-}
-.stat-card .stat-number {
-  font-size: 2.5rem;
+.page-title {
+  font-size: var(--font-size-3xl);
   font-weight: var(--font-weight-bold);
-  color: var(--color-primary);
-  margin: 0;
-}
-.chart-card {
-  padding: 24px;
-}
-.chart-card h3 {
-  margin-bottom: 24px;
-  text-align: center;
-}
-.chart-card--doughnut {
-  grid-column: span 1;
-}
-.doughnut-container {
-  position: relative;
-  height: 250px; /* Give doughnut a fixed height */
-  display: flex; /* Use flex to center chart */
-  justify-content: center;
-  align-items: center;
-}
-
-@media (max-width: 768px) {
-  .dashboard-grid {
-    grid-template-columns: 1fr; /* Stack columns on small screens */
-  }
-}
-
-/* --- Detailed Progress List Styles --- */
-.section-title {
-  margin-bottom: 16px;
-  border-bottom: 2px solid var(--color-border);
-  padding-bottom: 8px;
-}
-.progress-list {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-}
-.progress-item-card {
-  background-color: var(--color-surface);
-  border-radius: var(--radius-base);
-  border: 1px solid var(--color-card-border);
-  transition: box-shadow 0.2s ease;
-}
-.progress-item-card:hover {
-  box-shadow: var(--shadow-sm);
-}
-.progress-item-header {
-  padding: 16px;
-  cursor: pointer;
-}
-.course-title {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 12px;
-}
-.course-title h3 {
-  margin: 0;
-}
-.progress-bar-container {
-  width: 100%;
-  background-color: var(--color-secondary);
-  border-radius: var(--radius-full);
-  height: 24px;
-  overflow: hidden;
-}
-.progress-bar {
-  background-color: var(--color-primary);
-  color: white;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  height: 100%;
-  font-size: 12px;
-  font-weight: bold;
-  transition: width 0.5s ease-in-out;
-}
-.progress-item-details {
-  padding: 0 16px 16px;
-  border-top: 1px solid var(--color-border);
-}
-.progress-item-details h4 {
-  margin-top: 16px;
-  margin-bottom: 8px;
-}
-.progress-item-details ul {
-  list-style: none;
-  padding: 0;
-  margin: 0;
-}
-.lesson-detail-item {
-  display: flex;
-  justify-content: space-between;
-  padding: 8px 0;
-  border-bottom: 1px solid var(--color-border);
-}
-.lesson-detail-item:last-child {
-  border-bottom: none;
-}
-.completion-status {
-  color: transparent;
-  margin-right: 8px;
-  font-weight: bold;
-}
-.completion-status.completed {
-  color: var(--color-success);
-}
-.score-badge {
-  background-color: var(--color-primary);
-  color: white;
-  padding: 4px 8px;
-  border-radius: var(--radius-sm);
-  font-size: 12px;
-}
-.score-badge--secondary {
-  background-color: var(--color-secondary);
+  margin-bottom: var(--space-8);
   color: var(--color-text);
 }
 
-/* --- Empty State --- */
-.empty-state {
+.page-subtitle {
+  color: var(--color-text-secondary);
+}
+
+.stats-overview {
+  display: grid;
+  grid-template-columns: 1.5fr 1fr;
+  gap: var(--space-24);
+  margin-bottom: var(--space-48);
+}
+
+.stat-main {
+  padding: var(--space-32);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.stat-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-bottom: var(--space-24);
+}
+
+.stat-header h3 {
+  margin: 0;
+  font-size: var(--font-size-xl);
+}
+
+.stat-percent {
+  font-size: 48px;
+  font-weight: var(--font-weight-bold);
+  color: var(--color-primary);
+}
+
+.stat-progress-track {
+  height: 16px;
+  background-color: var(--color-secondary);
+  border-radius: var(--radius-full);
+  margin-bottom: var(--space-24);
+  overflow: hidden;
+  box-shadow: inset 0 2px 4px rgba(0,0,0,0.05);
+}
+
+.stat-progress-fill {
+  height: 100%;
+  background: var(--color-primary);
+  border-radius: var(--radius-full);
+  transition: width 1s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.stat-footer {
+  display: flex;
+  justify-content: space-between;
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+}
+
+.stat-chart {
+  padding: var(--space-24);
   display: flex;
   flex-direction: column;
   align-items: center;
+}
+
+.stat-chart h3 {
+  margin-bottom: var(--space-16);
+  font-size: var(--font-size-lg);
+}
+
+.chart-wrapper {
+  height: 200px;
+  width: 100%;
+}
+
+.section-title {
+  font-size: var(--font-size-2xl);
+  margin-bottom: var(--space-24);
+  color: var(--color-text);
+}
+
+.progress-grid {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-16);
+}
+
+.progress-card {
+  transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.progress-card-header {
+  padding: var(--space-24);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  cursor: pointer;
+}
+
+.course-name {
+  margin: 0 0 8px 0;
+  font-size: var(--font-size-lg);
+  font-weight: var(--font-weight-bold);
+}
+
+.score-pill {
+  font-size: var(--font-size-sm);
+  background-color: var(--color-pastel-purple);
+  color: var(--color-primary);
+  padding: 4px 12px;
+  border-radius: var(--radius-full);
+  font-weight: var(--font-weight-bold);
+}
+
+.progress-indicator {
+  display: flex;
+  align-items: center;
+  gap: var(--space-24);
+}
+
+.circular-progress {
+  font-weight: var(--font-weight-bold);
+  color: var(--color-primary);
+  font-size: var(--font-size-lg);
+}
+
+.expand-icon {
+  width: 32px;
+  height: 32px;
+  background-color: var(--color-secondary);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
   justify-content: center;
-  padding: 48px 24px;
-  text-align: center;
+  font-weight: bold;
+  transition: transform 0.3s ease;
+}
+
+.progress-card.expanded .expand-icon {
+  transform: rotate(180deg);
+}
+
+.progress-details {
+  padding: 0 var(--space-24) var(--space-24);
+}
+
+.details-divider {
+  height: 1px;
+  background-color: var(--color-border);
+  margin-bottom: var(--space-16);
+}
+
+.details-title {
+  font-size: var(--font-size-sm);
   color: var(--color-text-secondary);
-  background-color: var(--color-surface);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin-bottom: var(--space-16);
+  font-weight: var(--font-weight-bold);
+}
+
+.lessons-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-12);
+}
+
+.lesson-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 16px;
+  background-color: var(--color-secondary);
   border-radius: var(--radius-base);
+  transition: transform 0.2s ease;
 }
-.empty-state-icon {
-  font-size: 4rem;
-  margin-bottom: 16px;
+
+.lesson-row:hover {
+  transform: translateX(4px);
+  background-color: var(--color-border);
 }
-.empty-state-text {
-  font-size: 1.2rem;
-  margin-bottom: 24px;
+
+.lesson-status {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.status-dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background-color: #cbd5e1;
+  border: 2px solid white;
+}
+
+.status-dot.completed {
+  background-color: var(--color-success);
+  box-shadow: 0 0 8px rgba(34, 197, 94, 0.4);
+}
+
+.lesson-name {
+  font-weight: var(--font-weight-medium);
+  color: var(--color-text);
+}
+
+.lesson-meta {
+  display: flex;
+  align-items: center;
+  gap: var(--space-16);
+}
+
+.score-badge {
+  font-size: 12px;
+  color: var(--color-text-secondary);
+  font-weight: var(--font-weight-bold);
+  background: white;
+  padding: 2px 8px;
+  border-radius: var(--radius-sm);
+}
+
+.lesson-link {
+  color: var(--color-primary);
+  text-decoration: none;
+  font-weight: var(--font-weight-bold);
+  font-size: var(--font-size-sm);
+  padding: 4px 12px;
+  border-radius: var(--radius-full);
+  background: white;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+}
+
+.lesson-link:hover {
+  background: var(--color-primary);
+  color: white;
+}
+
+.empty-state {
+  text-align: center;
+  padding: 64px 24px;
+}
+
+.empty-dot {
+  width: 48px;
+  height: 48px;
+  background: var(--color-pastel-green);
+  border-radius: 50%;
+  margin: 0 auto var(--space-16);
+}
+
+/* Animations */
+.expand-enter-active, .expand-leave-active {
+  transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+  max-height: 1000px;
+  overflow: hidden;
+}
+.expand-enter-from, .expand-leave-to {
+  max-height: 0;
+  opacity: 0;
+}
+
+@media (max-width: 992px) {
+  .stats-overview {
+    grid-template-columns: 1fr;
+  }
 }
 </style>

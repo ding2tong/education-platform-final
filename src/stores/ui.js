@@ -7,6 +7,7 @@ export const useUiStore = defineStore('ui', {
     editingUser: null, // To hold the user object being edited by the admin
     isLoading: false,
     globalError: null, // Can be a string or an object
+    sidebarCollapsed: localStorage.getItem('sidebar-collapsed') === 'true',
   }),
   actions: {
     openProfileSetupModal() {
@@ -35,6 +36,10 @@ export const useUiStore = defineStore('ui', {
     },
     clearError() {
       this.globalError = null;
+    },
+    toggleSidebar() {
+      this.sidebarCollapsed = !this.sidebarCollapsed;
+      localStorage.setItem('sidebar-collapsed', this.sidebarCollapsed);
     },
   },
 })

@@ -14,6 +14,7 @@ import 'reveal.js/dist/reveal.css';
 import '@/assets/reveal-theme-custom.css';
 import markdownit from 'markdown-it';
 import markdownitIframe from 'markdown-it-iframe';
+import { splitMarkdownSlides } from '@/utils/markdownSlides';
 
 const props = defineProps({
   markdown: {
@@ -30,7 +31,7 @@ const revealContainer = ref(null);
 let deck;
 
 const parseMarkdown = (markdownText) => {
-  const slideContents = markdownText.split(/^---s*$/m).map(content => {
+  const slideContents = splitMarkdownSlides(markdownText).map(content => {
     const iframeRegex = /<iframe(.*?)src="(.*?)"(.*?)<\/iframe>/g;
     const processedContent = content.replace(iframeRegex, (match, preAttributes, src, postAttributes) => {
       if (src.includes('youtube.com')) {

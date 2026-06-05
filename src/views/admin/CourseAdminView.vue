@@ -1,8 +1,13 @@
 <template>
-  <div>
-    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
-      <h2>課程列表</h2>
-      <button class="btn btn--primary" @click="goToEditPage('new')">新增課程</button>
+  <div class="course-admin">
+    <div class="header-container">
+      <div class="title-group">
+        <h2 class="section-title">課程教材管理</h2>
+        <p class="section-subtitle">拖拽排序課程分類與內容，規劃學員的學習路徑</p>
+      </div>
+      <button class="btn-create-course" @click="goToEditPage('new')">
+        <span class="plus-icon">+</span> 新增課程
+      </button>
     </div>
 
     <draggable
@@ -10,60 +15,77 @@
       :list="courseCategories"
       group="categories"
       item-key="category"
-      handle=".kanban-column-title"
+      handle=".column-drag-handle"
       @end="onCategoryDragEnd"
     >
       <template #item="{ element: category }">
-        <div class="kanban-column">
-          <h3 class="kanban-column-title">{{ category }}</h3>
+        <div class="kanban-column card-soft" :style="{ backgroundColor: getCategoryPastel(category) }">
+          <div class="kanban-column-header">
+            <div class="column-drag-handle">⋮⋮</div>
+            <h3 class="column-title">{{ category }}</h3>
+            <span class="course-count-tag">{{ coursesByCategory[category]?.length || 0 }}</span>
+          </div>
+          
           <draggable
             class="kanban-list"
             :list="coursesByCategory[category]"
             group="courses"
             item-key="id"
-            handle=".drag-handle"
+            handle=".course-drag-handle"
             @end="onCourseDragEnd(category, $event)"
           >
             <template #item="{ element }">
-              <div class="course-card">
-                <div class="drag-handle">&#9776;</div>
-                <div class="course-main-info">
-                  <p class="course-title">{{ element.title }}</p>
-                  <span :class="['status-badge', element.published ? 'status-published' : 'status-draft']">
-                    {{ element.published ? '已上架' : '草稿' }}
-                  </span>
-                  <span class="lessons-count">單元: {{ element.lessonsCount || 0 }}</span>
+              <div class="course-kanban-card">
+                 <div class="course-drag-handle">
+                    <span class="drag-dots">::</span>
+                 </div>
+                <div class="course-info">
+                  <div class="course-title-row">
+                    <p class="course-card-title">{{ element.title }}</p>
+                    <span :class="['status-dot', element.published ? 'is-published' : 'is-draft']"></span>
+                  </div>
+                  <div class="course-meta-row">
+                    <span class="meta-tag">{{ element.lessonsCount || 0 }} 單元</span>
+                    <span class="status-text">{{ element.published ? '已上架' : '草稿' }}</span>
+                  </div>
                 </div>
-                <div class="course-actions">
-                  <button class="btn btn--sm btn--outline" @click="goToEditPage(element.id)">編輯</button>
-                  <button class="btn btn--sm btn--danger" @click="promptDelete(element)">刪除</button>
+                <div class="course-card-actions">
+                  <button class="icon-btn edit" @click="goToEditPage(element.id)" title="編輯">
+                    編輯
+                  </button>
+                  <button class="icon-btn delete" @click="promptDelete(element)" title="刪除">
+                    刪除
+                  </button>
                 </div>
               </div>
             </template>
           </draggable>
-          <div v-if="!coursesByCategory[category] || coursesByCategory[category].length === 0" class="empty-column">
-            <p>此分類沒有課程</p>
+          
+          <div v-if="!coursesByCategory[category] || coursesByCategory[category].length === 0" class="empty-column-soft">
+            <p>尚無課程</p>
           </div>
         </div>
       </template>
     </draggable>
 
     <!-- Custom Confirmation Modal -->
-    <div v-if="showDeleteModal" class="modal active">
-      <div class="modal-content">
-        <div class="modal-header">
-          <h3>確認刪除</h3>
-        </div>
-        <div class="modal-body">
-          <p>您確定要刪除課程「<strong>{{ courseToDelete.title }}</strong>」嗎？</p>
-          <p class="text-danger">此操作無法復原，且將一併刪除所有學員關於此課程的進度與測驗記錄。</p>
-        </div>
-        <div class="modal-footer">
-          <button class="btn btn--outline" @click="cancelDelete">取消</button>
-          <button class="btn btn--danger" @click="confirmDelete">確認刪除</button>
+    <transition name="fade">
+      <div v-if="showDeleteModal" class="modal-overlay" @click.self="cancelDelete">
+        <div class="modal-card card-soft">
+          <div class="modal-header">
+            <h3>確認刪除課程</h3>
+          </div>
+          <div class="modal-body">
+            <p>您確定要刪除「<strong>{{ courseToDelete.title }}</strong>」嗎？</p>
+            <p class="modal-note">這將會永久移除所有相關單元、測驗以及學員的學習紀錄。</p>
+          </div>
+          <div class="modal-footer">
+            <button class="btn-secondary" @click="cancelDelete">取消返回</button>
+            <button class="btn-danger-soft" @click="confirmDelete">確認永久刪除</button>
+          </div>
         </div>
       </div>
-    </div>
+    </transition>
   </div>
 </template>
 
@@ -97,14 +119,11 @@ const coursesByCategory = computed(() => {
     }
   });
 
-  // Sort courses within each category by order, then by createdAt
   for (const category in grouped) {
     grouped[category].sort((a, b) => {
       const orderA = a.order ?? Infinity;
       const orderB = b.order ?? Infinity;
-      if (orderA !== orderB) {
-        return orderA - orderB;
-      }
+      if (orderA !== orderB) return orderA - orderB;
       return new Date(b.createdAt) - new Date(a.createdAt);
     });
   }
@@ -139,126 +158,296 @@ const confirmDelete = async () => {
   try {
     await courseStore.deleteCourse(courseToDelete.value.id);
   } catch (error) {
-    alert('刪除課程失敗，請查看 console。');
+    console.error(error);
   } finally {
     cancelDelete();
   }
 };
+
+const getCategoryPastel = (category) => {
+  const map = {
+    '專業知識': '#E3F2FD',
+    '門市實務': '#E8F5E9',
+    '產品介紹': '#FFF3E0',
+    '衛教資訊': '#F3E5F5',
+    '法規宣導': '#FFEBEE'
+  };
+  return map[category] || '#F5F5F5';
+};
 </script>
 
 <style scoped>
+.course-admin {
+  animation: fadeIn 0.4s ease-out;
+}
+
+.header-container {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  margin-bottom: var(--space-32);
+}
+
+.section-title {
+  font-size: var(--font-size-2xl);
+  font-weight: var(--font-weight-bold);
+  margin-bottom: 8px;
+}
+
+.section-subtitle {
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-sm);
+}
+
+.btn-create-course {
+  background-color: var(--color-primary);
+  color: white;
+  border: none;
+  padding: 12px 24px;
+  border-radius: var(--radius-full);
+  font-weight: var(--font-weight-bold);
+  cursor: pointer;
+  box-shadow: var(--shadow-md);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.btn-create-course:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-lg);
+}
+
 .kanban-board {
   display: flex;
   flex-direction: column;
-  gap: 24px;
+  gap: var(--space-24);
 }
 
 .kanban-column {
-  background-color: var(--color-surface);
-  border-radius: var(--radius-lg);
-  padding: 16px;
-  border: 1px solid var(--color-border);
+  padding: var(--space-20);
+  min-height: 120px;
 }
 
-.kanban-column-title {
-  margin-top: 0;
-  margin-bottom: 16px;
-  padding-bottom: 16px;
-  border-bottom: 1px solid var(--color-border);
+.kanban-column-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: var(--space-16);
+}
+
+.column-drag-handle {
   cursor: grab;
+  color: rgba(0,0,0,0.2);
+  font-size: 1.2rem;
+  user-select: none;
+  letter-spacing: 0.1em;
+}
+
+.column-title {
+  font-size: 1.1rem;
+  font-weight: var(--font-weight-bold);
+  margin: 0;
+  flex: 1;
+}
+
+.course-count-tag {
+  background: white;
+  padding: 2px 10px;
+  border-radius: var(--radius-full);
+  font-size: 0.8rem;
+  font-weight: var(--font-weight-bold);
+  color: var(--color-text-secondary);
 }
 
 .kanban-list {
-  min-height: 200px;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 16px;
+  min-height: 50px;
+}
+
+.course-kanban-card {
+  background: white;
+  border-radius: var(--radius-lg);
+  padding: 16px;
   display: flex;
-  flex-direction: column;
+  align-items: center;
   gap: 12px;
-}
-
-.course-card {
-  display: flex;
-  align-items: center;
-  background-color: var(--color-background);
-  border: 1px solid var(--color-border-hover);
-  border-radius: var(--radius-base);
-  padding: 8px 12px; /* Reduced padding */
-  cursor: grab;
-  transition: box-shadow 0.2s ease;
-}
-.course-card:hover {
   box-shadow: var(--shadow-sm);
+  transition: all 0.3s ease;
+  border: 2px solid transparent;
 }
 
-.drag-handle {
-  margin-right: 12px;
-  color: var(--color-text-secondary);
+.course-kanban-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+  border-color: var(--color-primary);
+}
+
+.course-drag-handle {
   cursor: grab;
-}
-
-.course-main-info {
-  flex-grow: 1;
+  color: var(--color-text-secondary);
   display: flex;
   align-items: center;
-  gap: 12px; /* Spacing between items */
+  font-size: 0.9rem;
+  font-weight: bold;
+  letter-spacing: 0.05em;
 }
 
-.course-title {
-  font-weight: var(--font-weight-semibold);
-  margin: 0; /* Remove bottom margin */
-  font-size: var(--font-size-md); /* Adjust font size */
+.course-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.course-title-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 4px;
+}
+
+.course-card-title {
+  font-weight: var(--font-weight-bold);
+  font-size: 0.95rem;
+  margin: 0;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
-.lessons-count {
-  font-size: var(--font-size-sm);
-  color: var(--color-text-secondary);
-  white-space: nowrap;
+.status-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
 }
 
-.course-actions {
+.is-published { background-color: #4CAF50; box-shadow: 0 0 6px rgba(76, 175, 80, 0.4); }
+.is-draft { background-color: #9E9E9E; }
+
+.course-meta-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.meta-tag {
+  font-size: 0.75rem;
+  color: var(--color-text-secondary);
+  background: var(--color-secondary);
+  padding: 2px 8px;
+  border-radius: 4px;
+}
+
+.status-text {
+  font-size: 0.75rem;
+  color: var(--color-text-secondary);
+}
+
+.course-card-actions {
   display: flex;
   gap: 8px;
-  flex-shrink: 0; /* Prevent actions from shrinking */
 }
 
-.status-badge {
-  padding: 4px 8px;
-  border-radius: var(--radius-full);
-  font-size: var(--font-size-xs);
-  font-weight: var(--font-weight-semibold);
-  white-space: nowrap;
-  flex-shrink: 0; /* Prevent badge from shrinking */
-}
-.status-published {
-  background-color: var(--color-success);
-  color: var(--color-btn-primary-text);
-}
-.status-draft {
-  background-color: var(--color-text-secondary);
-  color: var(--color-btn-primary-text);
+.icon-btn {
+  width: auto;
+  height: auto;
+  padding: 4px 10px;
+  border-radius: 8px;
+  border: none;
+  background: var(--color-secondary);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  font-size: 0.7rem;
+  font-weight: var(--font-weight-bold);
+  color: var(--color-text-secondary);
+  transition: all 0.2s ease;
 }
 
-.empty-column {
+.icon-btn:hover {
+  transform: scale(1.1);
+}
+
+.icon-btn.edit:hover { background-color: #E3F2FD; color: #1976D2; }
+.icon-btn.delete:hover { background-color: #FFEBEE; color: #D32F2F; }
+
+.empty-column-soft {
+  padding: 32px;
   text-align: center;
   color: var(--color-text-secondary);
-  padding: 24px;
+  background: rgba(255,255,255,0.3);
+  border-radius: var(--radius-lg);
+  border: 2px dashed rgba(0,0,0,0.05);
 }
 
-/* Modal Styles */
-.modal.active {
+/* Modal Overlay */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0,0,0,0.3);
+  backdrop-filter: blur(4px);
   display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
 }
+
+.modal-card {
+  width: 90%;
+  max-width: 400px;
+  background: white;
+  padding: var(--space-32);
+  text-align: center;
+}
+
+.modal-warning-icon {
+  display: none;
+}
+
+.modal-note {
+  font-size: 0.9rem;
+  color: var(--color-danger);
+  margin-top: 12px;
+  font-weight: var(--font-weight-medium);
+}
+
 .modal-footer {
   display: flex;
-  justify-content: flex-end;
-  gap: 16px;
-  padding-top: 24px;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 24px;
 }
-.text-danger {
-  color: var(--color-danger);
-  font-weight: var(--font-weight-semibold);
-  margin-top: 8px;
+
+.btn-secondary {
+  padding: 12px;
+  border-radius: var(--radius-full);
+  border: none;
+  background: var(--color-secondary);
+  font-weight: var(--font-weight-bold);
+  cursor: pointer;
+}
+
+.btn-danger-soft {
+  padding: 12px;
+  border-radius: var(--radius-full);
+  border: none;
+  background: #FFEBEE;
+  color: #D32F2F;
+  font-weight: var(--font-weight-bold);
+  cursor: pointer;
+}
+
+.fade-enter-active, .fade-leave-active { transition: opacity 0.3s; }
+.fade-enter-from, .fade-leave-to { opacity: 0; }
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 </style>

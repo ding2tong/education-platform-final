@@ -1,69 +1,82 @@
 <template>
-  <div class="page">
-    <div class="container">
-      <h1>所有課程</h1>
+  <div class="courses-container">
+    <header class="page-header">
+      <h1 class="page-title">課程中心</h1>
+      <p class="page-subtitle">探索豐富的專業課程，開啟您的學習之旅</p>
+    </header>
 
-      <!-- Filter & Control Bar -->
-      <div class="filter-control-bar">
-        <div class="status-filters">
-          <button
-            v-for="status in statusOptions"
-            :key="status"
-            class="btn btn--sm"
-            :class="{ 'btn--primary': statusFilter === status, 'btn--outline': statusFilter !== status }"
-            @click="statusFilter = status"
+    <!-- Filter & Control Bar -->
+    <div class="control-panel card">
+      <div class="search-section">
+        <div class="search-wrapper">
+          <input 
+            type="text" 
+            class="search-input" 
+            v-model="searchQuery" 
+            placeholder="搜尋感興趣的課程..."
           >
-            {{ status }}
-          </button>
         </div>
-        <div class="form-group">
-          <select class="form-control" v-model="selectedCategory">
+      </div>
+      
+      <div class="filter-section">
+        <div class="filter-group">
+          <span class="filter-label">學習狀態</span>
+          <div class="status-pills">
+            <button
+              v-for="status in statusOptions"
+              :key="status"
+              class="pill-btn"
+              :class="{ 'active': statusFilter === status }"
+              @click="statusFilter = status"
+            >
+              {{ status }}
+            </button>
+          </div>
+        </div>
+
+        <div class="filter-group">
+          <span class="filter-label">類別篩選</span>
+          <select class="category-select" v-model="selectedCategory">
             <option value="">所有分類</option>
             <option v-for="category in availableCategories" :key="category" :value="category">
               {{ category }}
             </option>
           </select>
         </div>
-        <div class="search-filter">
-          <input type="text" class="form-control" v-model="searchQuery" placeholder="搜尋課程...">
+      </div>
+    </div>
+
+    <!-- Loading / Empty State -->
+    <div v-if="loading" class="mt-8">
+      <CourseListSkeleton :count="4" />
+    </div>
+    
+    <div v-else-if="Object.keys(groupedCourses).length === 0" class="empty-state card">
+      <div class="empty-dot"></div>
+      <h3>找不到符合條件的課程</h3>
+      <p>試試看調整搜尋關鍵字或篩選條件</p>
+      <button class="btn btn--primary mt-4" @click="resetFilters">重設篩選</button>
+    </div>
+
+    <!-- Course List Grouped by Category -->
+    <div v-else class="groups-container">
+      <div v-for="(courses, category) in groupedCourses" :key="category" class="category-section">
+        <div class="section-header">
+          <h2 class="category-name">{{ category }}</h2>
+          <span class="course-count">{{ courses.length }} 門課程</span>
         </div>
-      </div>
-
-      <!-- Loading / Empty State -->
-      <div v-if="loading" class="loading-placeholder">正在載入課程與您的學習進度...</div>
-      <div v-else-if="Object.keys(groupedCourses).length === 0" class="empty-state">
-        <p>找不到符合條件的課程。</p>
-        <p>試試看調整您的篩選條件。</p>
-      </div>
-
-      <!-- Course List -->
-      <div v-else>
-        <div v-for="(courses, category) in groupedCourses" :key="category" class="category-group">
-          <h2 class="category-title">{{ category }}</h2>
-          <div class="course-list">
-            <transition-group name="list-item" tag="div">
-              <div v-for="course in courses" :key="course.id" class="course-item">
-                <div class="course-info">
-                  <h3 class="course-title">{{ course.title }}</h3>
-                  <p class="course-description">{{ course.description }}</p>
-                  <div class="course-progress-display">
-                    <div class="progress-bar">
-                      <div class="progress-bar-fill" :style="{ width: getCourseStatusInfo(course).progressPercent + '%' }"></div>
-                    </div>
-                    <span class="progress-text">({{ getCourseStatusInfo(course).completedLessons }}/{{ getCourseStatusInfo(course).totalLessons }})</span>
-                  </div>
-                </div>
-                <div class="course-actions">
-                  <span :class="['status-badge', getCourseStatusInfo(course).statusClass]">
-                    {{ getCourseStatusInfo(course).statusText }}
-                  </span>
-                  <button class="btn btn--primary" @click="handleCourseAction(course.id)">
-                    {{ getCourseStatusInfo(course).actionText }}
-                  </button>
-                </div>
-              </div>
-            </transition-group>
-          </div>
+        
+        <div class="course-grid">
+          <transition-group name="list" tag="div">
+            <CourseItem 
+              v-for="course in courses" 
+              :key="course.id" 
+              :course="course"
+              :statusInfo="getCourseStatusInfo(course)"
+              :bgColor="categoryColorMap[category]"
+              @action="handleCourseAction"
+            />
+          </transition-group>
         </div>
       </div>
     </div>
@@ -76,6 +89,8 @@ import { useCourseStore } from '@/stores/course';
 import { useAuthStore } from '@/stores/auth';
 import { useRouter } from 'vue-router';
 import { storeToRefs } from 'pinia';
+import CourseItem from '@/components/CourseItem.vue';
+import CourseListSkeleton from '@/components/CourseListSkeleton.vue';
 
 const courseStore = useCourseStore();
 const authStore = useAuthStore();
@@ -90,15 +105,37 @@ const statusFilter = ref('全部');
 const selectedCategory = ref('');
 const loading = ref(true);
 
+// Category Color Mapping
+const categoryColorMap = computed(() => {
+  const map = {};
+  const colors = [
+    'var(--color-pastel-purple)',
+    'var(--color-pastel-orange)',
+    'var(--color-pastel-blue)',
+    'var(--color-pastel-green)'
+  ];
+  
+  availableCategories.value.forEach((cat, index) => {
+    map[cat] = colors[index % colors.length];
+  });
+  return map;
+});
+
 onMounted(async () => {
   loading.value = true;
   await Promise.all([
     courseStore.fetchAllCourses(),
     authStore.fetchUserProgress(),
-    courseStore.fetchCategories() // Ensure categories are fetched
+    courseStore.fetchCategories()
   ]);
   loading.value = false;
 });
+
+const resetFilters = () => {
+  searchQuery.value = '';
+  statusFilter.value = '全部';
+  selectedCategory.value = '';
+};
 
 const getCourseStatusInfo = (course) => {
   if (!userProgress.value || !course) {
@@ -159,17 +196,14 @@ const groupedCourses = computed(() => {
 
   let courses = courseStore.courses.filter(c => c.published);
 
-  // Filter by status
   if (statusFilter.value !== '全部') {
     courses = courses.filter(course => getCourseStatusInfo(course).status === statusFilter.value);
   }
   
-  // Filter by category
   if (selectedCategory.value) {
     courses = courses.filter(course => course.category === selectedCategory.value);
   }
 
-  // Filter by search query
   if (searchQuery.value) {
     const lowerCaseQuery = searchQuery.value.toLowerCase();
     courses = courses.filter(course =>
@@ -178,7 +212,6 @@ const groupedCourses = computed(() => {
     );
   }
 
-  // Group the final list
   const grouped = {};
   availableCategories.value.forEach(category => {
     const coursesInCategory = courses.filter(c => c.category === category);
@@ -190,188 +223,187 @@ const groupedCourses = computed(() => {
   return grouped;
 });
 
-const handleCourseAction = (courseId) => {
-  router.push({ name: 'course-detail', params: { id: courseId } });
+const handleCourseAction = async (courseId) => {
+  // Fetch course details to get lesson list
+  await courseStore.fetchCourseDetails(courseId)
+  const course = courseStore.currentCourse
+
+  if (!course || !course.lessons || course.lessons.length === 0) {
+    // Fallback: no lessons yet, go to course detail
+    router.push({ name: 'course-detail', params: { id: courseId } })
+    return
+  }
+
+  const progress = userProgress.value?.[courseId]
+  const completedLessons = progress?.completedLessons || []
+
+  // Find first incomplete lesson, or default to first lesson
+  const firstIncomplete = course.lessons.find(l => !completedLessons.includes(l.id))
+  const targetLesson = firstIncomplete || course.lessons[0]
+
+  router.push({ name: 'lesson', params: { courseId, lessonId: targetLesson.id } })
 };
 </script>
 
 <style scoped>
-.page {
-  padding-top: 32px;
-  padding-bottom: 64px;
+.courses-container {
+  max-width: var(--container-lg);
+  margin: 0 auto;
 }
 
-h1 {
-  margin-bottom: 24px;
+.page-header {
+  margin-bottom: var(--space-32);
 }
 
-.filter-control-bar {
+.page-title {
+  font-size: var(--font-size-3xl);
+  font-weight: var(--font-weight-bold);
+  color: var(--color-text);
+  margin-bottom: var(--space-8);
+}
+
+.page-subtitle {
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-lg);
+}
+
+.control-panel {
+  padding: var(--space-24);
+  margin-bottom: var(--space-32);
   display: flex;
-  align-items: center;
-  margin-bottom: 32px;
-  gap: 16px;
+  flex-direction: column;
+  gap: var(--space-24);
+}
+
+.search-wrapper {
+  position: relative;
+}
+
+.search-input {
+  width: 100%;
+  padding: 14px 20px;
+  border-radius: var(--radius-base);
+  border: 1px solid var(--color-border);
+  background-color: var(--color-secondary);
+  font-size: var(--font-size-base);
+  transition: all 0.3s ease;
+}
+
+.search-input:focus {
+  outline: none;
+  background-color: white;
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 4px var(--color-focus-ring);
+}
+
+.filter-section {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: var(--space-24);
   flex-wrap: wrap;
 }
 
-.status-filters {
-  display: flex;
-  gap: 8px;
-}
-
-.filter-control-bar .form-group {
-  margin-bottom: 0;
-  min-width: 150px;
-}
-
-.search-filter {
-  flex-grow: 1;
-  min-width: 200px;
-}
-
-.category-group {
-  margin-bottom: 48px;
-}
-
-.category-title {
-  font-size: var(--font-size-xl);
-  font-weight: var(--font-weight-bold);
-  margin-bottom: 16px;
-  padding-bottom: 8px;
-  border-bottom: 2px solid var(--color-primary);
-}
-
-.course-list {
+.filter-group {
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: var(--space-8);
 }
 
-.course-item {
+.filter-label {
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text-secondary);
+  margin-left: 4px;
+}
+
+.status-pills {
   display: flex;
-  align-items: center;
-  background-color: var(--color-surface);
+  gap: var(--space-8);
+  background-color: var(--color-secondary);
+  padding: 4px;
+  border-radius: var(--radius-full);
+}
+
+.pill-btn {
+  padding: 8px 20px;
+  border-radius: var(--radius-full);
+  border: none;
+  background: transparent;
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.pill-btn.active {
+  background-color: white;
+  color: var(--color-primary);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+}
+
+.category-select {
+  padding: 10px 16px;
+  border-radius: var(--radius-base);
   border: 1px solid var(--color-border);
-  border-radius: var(--radius-lg);
-  padding: 16px 24px; /* Reduced padding */
-  transition: all 0.2s ease;
-}
-
-.course-item:hover {
-  transform: translateY(-2px);
-  box-shadow: var(--shadow-md);
-  border-color: var(--color-primary);
-}
-
-.course-info {
-  flex-grow: 1;
-  margin-right: 24px;
-  display: flex; /* Make course-info a flex container */
-  align-items: center;
-  gap: 12px; /* Spacing between elements */
-}
-
-.course-title {
-  font-size: var(--font-size-lg);
-  font-weight: var(--font-weight-semibold);
-  margin: 0; /* Remove margin */
-  flex-shrink: 0; /* Prevent title from shrinking */
-  flex-grow: 0; /* Prevent title from growing */
-  white-space: normal; /* Allow title to wrap if needed */
-  overflow: visible; /* Ensure full title is visible */
-  text-overflow: clip; /* Ensure full title is visible */
-  max-width: 30%; /* Give title a max-width to prevent it from pushing everything too much */
-}
-
-.course-description {
+  background-color: var(--color-secondary);
   font-size: var(--font-size-sm);
-  color: var(--color-text-secondary);
-  margin: 0; /* Remove margin */
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  flex-grow: 1; /* Allow description to take available space */
-  min-width: 0; /* Allow description to shrink */
-  text-align: right; /* Align description to the right */
+  min-width: 180px;
+  cursor: pointer;
 }
 
-.course-progress-display {
+.category-section {
+  margin-bottom: var(--space-32);
+}
+
+.section-header {
   display: flex;
-  align-items: center;
-  gap: 8px;
-  flex-shrink: 0; /* Prevent shrinking */
-  margin-left: 16px; /* Add some space */
+  justify-content: space-between;
+  align-items: baseline;
+  margin-bottom: var(--space-16);
+  padding: 0 var(--space-8);
 }
 
-.progress-bar {
-  width: 80px; /* Fixed width for progress bar */
-  height: 8px;
-  background-color: var(--color-border);
-  border-radius: var(--radius-full);
-  overflow: hidden;
-}
-
-.progress-bar-fill {
-  height: 100%;
-  background-color: var(--color-primary);
-  border-radius: var(--radius-full);
-  transition: width 0.5s ease;
-}
-
-.progress-text {
-  font-size: var(--font-size-sm);
-  font-weight: var(--font-weight-semibold);
-  color: var(--color-text-secondary);
-  white-space: nowrap;
-}
-
-.course-actions {
-  display: flex;
-  align-items: center;
-  gap: 16px;
-  flex-shrink: 0;
-}
-
-.status-badge {
-  padding: 4px 12px;
-  border-radius: var(--radius-full);
-  font-size: var(--font-size-sm);
-  font-weight: var(--font-weight-semibold);
-  white-space: nowrap;
-}
-
-.status-badge.status-completed {
-  background-color: var(--color-success);
-  color: var(--color-btn-primary-text);
-}
-.status-badge.status-in-progress {
-  background-color: var(--color-warning);
-  color: var(--color-btn-primary-text);
-}
-.status-badge.status-not-started {
-  background-color: var(--color-surface-secondary);
-  color: var(--color-text-secondary);
-}
-
-.loading-placeholder, .empty-state {
-  text-align: center;
-  padding: 64px 0;
-  color: var(--color-text-secondary);
-  background-color: var(--color-surface);
-  border-radius: var(--radius-lg);
-}
-
-.empty-state p {
+.category-name {
+  font-size: var(--font-size-xl);
+  font-weight: var(--font-weight-bold);
   margin: 0;
 }
 
-/* Staggered list animation */
-.list-item-enter-active,
-.list-item-leave-active {
+.course-count {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-secondary);
+}
+
+.empty-state {
+  text-align: center;
+  padding: var(--space-32) * 2;
+}
+
+.empty-dot {
+  width: 48px;
+  height: 48px;
+  background: var(--color-pastel-blue);
+  border-radius: 50%;
+  margin: 0 auto var(--space-16);
+}
+
+/* Animations */
+.list-enter-active,
+.list-leave-active {
   transition: all 0.5s ease;
 }
-.list-item-enter-from,
-.list-item-leave-to {
+.list-enter-from,
+.list-leave-to {
   opacity: 0;
-  transform: translateY(20px);
+  transform: translateX(30px);
+}
+
+@media (max-width: 768px) {
+  .filter-section {
+    flex-direction: column;
+    align-items: stretch;
+  }
 }
 </style>

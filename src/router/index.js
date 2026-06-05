@@ -41,11 +41,7 @@ const router = createRouter({
           meta: { requiresAuth: true, requiresAdmin: true },
           children: [
             { path: '', redirect: '/admin/dashboard' },
-            {
-              path: 'students',
-              name: 'admin-students',
-              component: () => import('../views/admin/StudentAdminView.vue')
-            },
+
             {
               path: 'courses',
               name: 'admin-courses',
@@ -88,7 +84,7 @@ const router = createRouter({
           path: 'courses/:courseId/lesson/:lessonId',
           name: 'lesson',
           component: () => import('../views/LessonView.vue'),
-          meta: { requiresAuth: true }
+          meta: { requiresAuth: true, fullWidth: true }
         },
         {
           path: 'courses/:courseId/quiz',

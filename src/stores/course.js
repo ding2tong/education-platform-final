@@ -42,9 +42,17 @@ export const useCourseStore = defineStore('course', {
         const coursesSnapshot = await getDocs(coursesCollection);
         
         let coursesWithCount = await Promise.all(coursesSnapshot.docs.map(async (doc) => {
-          const lessonsRef = collection(db, `courses/${doc.id}/lessons`);
-          const lessonsSnapshot = await getDocs(lessonsRef);
-          return { id: doc.id, ...doc.data(), lessonsCount: lessonsSnapshot.size };
+          const data = doc.data();
+          let count = data.lessonsCount;
+          // Fallback for older courses without the denormalized lessonsCount field
+          if (count === undefined) {
+            const lessonsRef = collection(db, `courses/${doc.id}/lessons`);
+            const lessonsSnapshot = await getDocs(lessonsRef);
+            count = lessonsSnapshot.size;
+            // Note: Data healing (updating the doc with count) could happen here, 
+            // but omitted to avoid unexpected mass writes on first load.
+          }
+          return { id: doc.id, ...data, lessonsCount: count };
         }));
 
         // Unified sorting logic
@@ -161,7 +169,16 @@ export const useCourseStore = defineStore('course', {
         const courseRef = doc(db, 'courses', courseId);
         batch.delete(courseRef);
 
-        // 2. Find all users and delete their progress/quiz results for this course
+        // 2. Delete subcollections (lessons, quizzes) to prevent orphaned data
+        const lessonsCollectionRef = collection(db, `courses/${courseId}/lessons`);
+        const lessonsSnap = await getDocs(lessonsCollectionRef);
+        lessonsSnap.forEach(doc => batch.delete(doc.ref));
+
+        const quizzesCollectionRef = collection(db, `courses/${courseId}/quizzes`);
+        const quizzesSnap = await getDocs(quizzesCollectionRef);
+        quizzesSnap.forEach(doc => batch.delete(doc.ref));
+
+        // 3. Find all users and delete their progress/quiz results for this course
         const usersCollectionRef = collection(db, 'users');
         const usersSnapshot = await getDocs(usersCollectionRef);
 
@@ -180,10 +197,6 @@ export const useCourseStore = defineStore('course', {
             batch.delete(quizDoc.ref);
           });
         }
-
-        // IMPORTANT: This does not delete subcollections (lessons, quizzes) within the course itself.
-        // A proper implementation requires a Cloud Function for recursive deletion of subcollections.
-        // For now, we are manually deleting user progress.
 
         await batch.commit();
         await this.fetchAllCourses(); // Refresh the list
@@ -208,6 +221,10 @@ export const useCourseStore = defineStore('course', {
           const newLessonRef = doc(lessonsCollectionRef);
           const newOrder = (this.currentCourse?.lessons?.length || 0) + 1;
           await setDoc(newLessonRef, { ...lessonData, id: newLessonRef.id, order: newOrder });
+
+          // Update course lessonsCount (Denormalization for performance)
+          const courseRef = doc(db, 'courses', courseId);
+          await updateDoc(courseRef, { lessonsCount: newOrder });
         }
         await this.fetchCourseDetails(courseId); // Refresh current course to update lessons
       } catch (error) {
@@ -226,6 +243,11 @@ export const useCourseStore = defineStore('course', {
           const lessonDocRef = doc(db, `courses/${courseId}/lessons`, lesson.id);
           batch.update(lessonDocRef, { order: index + 1 });
         });
+
+        // Update course lessonsCount (Denormalization for performance)
+        const courseRef = doc(db, 'courses', courseId);
+        batch.update(courseRef, { lessonsCount: this.currentCourse.lessons.length });
+
         await batch.commit();
         await this.fetchCourseDetails(courseId); // Refresh again after reordering
       } catch (error) {

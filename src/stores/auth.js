@@ -126,7 +126,7 @@ export const useAuthStore = defineStore('auth', {
       this.userProgress = progressData;
     },
     async markLessonComplete(courseId, lessonId) {
-      if (!this.currentUser || this.isAdmin) return;
+      if (!this.currentUser) return;
       const progressDocRef = doc(db, `users/${this.currentUser.uid}/progress`, courseId);
       const progressDoc = await getDoc(progressDocRef);
 
@@ -143,7 +143,7 @@ export const useAuthStore = defineStore('auth', {
     },
     async submitQuiz(courseId, quizId, answers, lessonId = null) {
       const courseStore = useCourseStore();
-      if (!this.currentUser || this.isAdmin) return;
+      if (!this.currentUser) return;
 
       const quizData = lessonId 
         ? courseStore.currentCourse?.lessons.find(l => l.id === lessonId)?.quiz

@@ -18,7 +18,18 @@
               </div>
               <div class="form-group">
                 <label class="form-label">單元內容 (Markdown)</label>
-                <textarea ref="markdownEditor" class="form-control markdown-textarea" v-model="lesson.content" @paste="handlePaste"></textarea>
+                <div class="prompt-guidance">
+                  <strong>圖片提示詞品質基準</strong>
+                  <span>每個圖片 Prompt 請包含：風格、光線、主體、場景、構圖、情緒或用途。</span>
+                  <code>例：溫暖寫實攝影風格，午後柔和自然光，一位藥師在明亮藥局櫃台前整理保健品，近景構圖，乾淨專業、親切可信。</code>
+                </div>
+                <textarea
+                  ref="markdownEditor"
+                  class="form-control markdown-textarea"
+                  v-model="lesson.content"
+                  @paste="handlePaste"
+                  placeholder="使用 --- 分隔投影片。圖片 Prompt 範例：水彩插畫風格，晨間柔光，主體是一盒保健品與量匙，放在乾淨白色桌面，俯視構圖，清爽、安心、適合課程封面。"
+                ></textarea>
               </div>
               <div class="error-message" v-if="error">{{ error }}</div>
             </div>
@@ -62,6 +73,7 @@ import { ref, onMounted, computed } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { useCourseStore } from '@/stores/course';
 import RevealSlides from '@/components/RevealSlides.vue';
+import { SLIDE_SEPARATOR_REGEX } from '@/utils/markdownSlides';
 
 const route = useRoute();
 const router = useRouter();
@@ -141,7 +153,7 @@ const handleSlideChange = (slideIndex) => {
 
   const editor = markdownEditor.value;
   const content = lesson.value.content;
-  const separatorRegex = /^---s*$/gm; // g for global, m for multiline
+  const separatorRegex = new RegExp(SLIDE_SEPARATOR_REGEX.source, SLIDE_SEPARATOR_REGEX.flags);
 
   // Find all separator indices
   const separatorIndices = [0]; // The first slide starts at index 0
@@ -219,6 +231,31 @@ const handleSlideChange = (slideIndex) => {
   resize: vertical;
   font-family: monospace;
   min-height: 400px;
+}
+
+.prompt-guidance {
+  display: grid;
+  gap: var(--space-8);
+  padding: var(--space-16);
+  margin-bottom: var(--space-12);
+  background: var(--color-secondary);
+  border-radius: var(--radius-base);
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-sm);
+}
+
+.prompt-guidance strong {
+  color: var(--color-text);
+}
+
+.prompt-guidance code {
+  display: block;
+  padding: var(--space-12);
+  background: var(--color-surface);
+  border-radius: var(--radius-sm);
+  color: var(--color-text);
+  white-space: normal;
+  line-height: 1.6;
 }
 
 .aspect-ratio-container {
