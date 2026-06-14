@@ -74,6 +74,7 @@
               :course="course"
               :statusInfo="getCourseStatusInfo(course)"
               :bgColor="categoryColorMap[category]"
+              :assignmentInfo="getAssignmentInfo(course.id)"
               @action="handleCourseAction"
             />
           </transition-group>
@@ -87,6 +88,7 @@
 import { onMounted, computed, ref } from 'vue';
 import { useCourseStore } from '@/stores/course';
 import { useAuthStore } from '@/stores/auth';
+import { useAssignmentStore } from '@/stores/assignment';
 import { useRouter } from 'vue-router';
 import { storeToRefs } from 'pinia';
 import CourseItem from '@/components/CourseItem.vue';
@@ -94,6 +96,7 @@ import CourseListSkeleton from '@/components/CourseListSkeleton.vue';
 
 const courseStore = useCourseStore();
 const authStore = useAuthStore();
+const assignmentStore = useAssignmentStore();
 const router = useRouter();
 
 const { userProgress } = storeToRefs(authStore);
@@ -123,18 +126,37 @@ const categoryColorMap = computed(() => {
 
 onMounted(async () => {
   loading.value = true;
-  await Promise.all([
-    courseStore.fetchAllCourses(),
-    authStore.fetchUserProgress(),
-    courseStore.fetchCategories()
-  ]);
-  loading.value = false;
+  try {
+    await Promise.all([
+      courseStore.fetchAllCourses(),
+      authStore.fetchUserProgress(),
+      courseStore.fetchCategories(),
+      assignmentStore.fetchStudentAssignments()
+    ]);
+  } catch (error) {
+    console.error('Error loading course center:', error);
+  } finally {
+    loading.value = false;
+  }
 });
 
 const resetFilters = () => {
   searchQuery.value = '';
   statusFilter.value = '全部';
   selectedCategory.value = '';
+};
+
+const getAssignmentInfo = (courseId) => {
+  const assignment = assignmentStore.studentAssignments
+    .filter(item => item.courseId === courseId)
+    .sort((a, b) => new Date(a.dueAt || 0) - new Date(b.dueAt || 0))[0];
+  if (!assignment) return null;
+  const dueAt = assignment.dueAt ? new Date(assignment.dueAt) : null;
+  const isOverdue = dueAt ? dueAt < new Date() : false;
+  return {
+    isOverdue,
+    label: isOverdue ? `已逾期 ${dueAt.toLocaleDateString('zh-TW')}` : `截止 ${dueAt.toLocaleDateString('zh-TW')}`,
+  };
 };
 
 const getCourseStatusInfo = (course) => {

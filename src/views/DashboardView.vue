@@ -5,6 +5,25 @@
       <p class="page-subtitle">歡迎回來，{{ authStore.currentUser?.displayName }}！繼續您的學習進度吧。</p>
     </header>
 
+    <section v-if="assignmentStore.studentAssignments.length > 0" class="assignment-section">
+      <h2 class="section-title">指定任務</h2>
+      <div class="assignment-grid">
+        <div v-for="assignment in assignmentStore.studentAssignments" :key="assignment.id" class="assignment-card card">
+          <div>
+            <span class="assignment-pill" :class="{ overdue: isAssignmentOverdue(assignment) }">
+              {{ isAssignmentOverdue(assignment) ? '已逾期' : '必修' }}
+            </span>
+            <h3>{{ assignment.title }}</h3>
+            <p>{{ assignment.courseTitle }}</p>
+            <p class="assignment-due">截止：{{ formatDateTime(assignment.dueAt) }}</p>
+          </div>
+          <router-link :to="{ name: 'course-detail', params: { id: assignment.courseId } }" class="btn btn--primary btn--sm">
+            前往課程
+          </router-link>
+        </div>
+      </div>
+    </section>
+
     <div v-if="!hasStartedAnyCourse" class="empty-state card">
       <div class="empty-dot"></div>
       <h3>尚未開始任何課程</h3>
@@ -100,6 +119,7 @@
 import { onMounted, computed, ref } from 'vue';
 import { useAuthStore } from '@/stores/auth';
 import { useCourseStore } from '@/stores/course';
+import { useAssignmentStore } from '@/stores/assignment';
 import { Doughnut } from 'vue-chartjs';
 import { Chart as ChartJS, Title, Tooltip, Legend, ArcElement } from 'chart.js';
 
@@ -107,22 +127,24 @@ ChartJS.register(Title, Tooltip, Legend, ArcElement);
 
 const authStore = useAuthStore();
 const courseStore = useCourseStore();
+const assignmentStore = useAssignmentStore();
 const expandedCourseId = ref(null);
 
 onMounted(async () => {
-  if (Object.keys(authStore.userProgress).length === 0) {
-    await authStore.loadUserData();
+  if (!authStore.userProgress || Object.keys(authStore.userProgress).length === 0) {
+    await authStore.fetchUserProgress();
   }
   if (courseStore.courses.length === 0) {
     await courseStore.fetchAllCourses();
   }
+  await assignmentStore.fetchStudentAssignments();
 });
 
-const hasStartedAnyCourse = computed(() => Object.keys(authStore.userProgress).length > 0);
+const hasStartedAnyCourse = computed(() => Object.keys(authStore.userProgress || {}).length > 0);
 
 const trackedCourses = computed(() => {
   return courseStore.courses
-    .filter(course => authStore.userProgress[course.id] && course.published)
+    .filter(course => authStore.userProgress?.[course.id] && course.published)
     .sort((a, b) => a.title.localeCompare(b.title));
 });
 
@@ -198,8 +220,12 @@ const getLatestLessonQuizScore = (progress, lessonId) => {
 };
 
 const isLessonCompleted = (courseId, lessonId) => {
-  return authStore.userProgress[courseId]?.completedLessons?.includes(lessonId) || false;
+  return authStore.userProgress?.[courseId]?.completedLessons?.includes(lessonId) || false;
 };
+
+const isAssignmentOverdue = (assignment) => assignment.dueAt && new Date(assignment.dueAt) < new Date();
+
+const formatDateTime = (value) => value ? new Date(value).toLocaleString('zh-TW') : '未設定';
 </script>
 
 <style scoped>
@@ -228,6 +254,49 @@ const isLessonCompleted = (courseId, lessonId) => {
   grid-template-columns: 1.5fr 1fr;
   gap: var(--space-24);
   margin-bottom: var(--space-48);
+}
+
+.assignment-section {
+  margin-bottom: var(--space-40);
+}
+
+.assignment-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-16);
+}
+
+.assignment-card {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--space-16);
+  align-items: flex-end;
+  padding: var(--space-24);
+}
+
+.assignment-card h3 {
+  margin-top: var(--space-12);
+  margin-bottom: var(--space-8);
+}
+
+.assignment-pill {
+  display: inline-flex;
+  padding: 6px 12px;
+  border-radius: var(--radius-full);
+  background: var(--color-pastel-purple);
+  color: var(--color-primary);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-bold);
+}
+
+.assignment-pill.overdue {
+  background: #fee2e2;
+  color: var(--color-error);
+}
+
+.assignment-due {
+  margin-top: var(--space-8);
+  font-weight: var(--font-weight-bold);
 }
 
 .stat-main {

@@ -11,6 +11,10 @@ defineProps({
   bgColor: {
     type: String,
     default: 'var(--color-surface)'
+  },
+  assignmentInfo: {
+    type: Object,
+    default: null
   }
 });
 defineEmits(['action']);
@@ -20,6 +24,10 @@ defineEmits(['action']);
   <div class="course-card" :style="{ backgroundColor: bgColor }">
     <div class="course-content">
       <div class="course-main">
+        <div v-if="assignmentInfo" class="assignment-badge" :class="{ overdue: assignmentInfo.isOverdue }">
+          <span>必修</span>
+          <span>{{ assignmentInfo.label }}</span>
+        </div>
         <h3 class="course-title">{{ course.title }}</h3>
         <p class="course-description">{{ course.description }}</p>
       </div>
@@ -77,6 +85,24 @@ defineEmits(['action']);
   color: var(--color-text);
   font-size: var(--font-size-xl);
   font-weight: var(--font-weight-bold);
+}
+
+.assignment-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-8);
+  padding: 6px 12px;
+  border-radius: var(--radius-full);
+  background: white;
+  color: var(--color-primary);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-bold);
+  margin-bottom: var(--space-8);
+  box-shadow: var(--shadow-sm);
+}
+
+.assignment-badge.overdue {
+  color: var(--color-error);
 }
 
 .course-description {

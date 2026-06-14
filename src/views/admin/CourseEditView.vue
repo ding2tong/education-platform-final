@@ -17,9 +17,18 @@
               <label class="form-label">課程分類</label>
               <select class="form-control" v-model="course.category" required>
                 <option disabled value="">請選擇分類</option>
-                <option>教育訓練</option>
-                <option>商品教育</option>
-                <option>IG/電子報</option>
+                <option v-for="category in courseStore.categoryTree" :key="category.name" :value="category.name">
+                  {{ category.name }}
+                </option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label">課程子分類</label>
+              <select class="form-control" v-model="course.subcategory" :disabled="availableSubcategories.length === 0">
+                <option value="">不指定子分類</option>
+                <option v-for="subcategory in availableSubcategories" :key="subcategory" :value="subcategory">
+                  {{ subcategory }}
+                </option>
               </select>
             </div>
             <div class="form-group">
@@ -93,11 +102,14 @@ const courseStore = useCourseStore();
 const courseId = route.params.id;
 const isNewCourse = computed(() => courseId === 'new');
 
-const course = ref({ title: '', description: '', category: '', published: false });
+const course = ref({ title: '', description: '', category: '', subcategory: '', published: false });
 const localLessons = ref([]);
 
 const lessons = computed(() => courseStore.currentCourse?.lessons || []);
 const quiz = computed(() => courseStore.currentCourse?.quiz || { questions: [] });
+const availableSubcategories = computed(() => {
+  return courseStore.categoryTree.find(category => category.name === course.value.category)?.subcategories || [];
+});
 
 // Keep localLessons in sync with the store
 watch(lessons, (newLessons) => {
@@ -105,11 +117,18 @@ watch(lessons, (newLessons) => {
 }, { immediate: true });
 
 onMounted(async () => {
+  await courseStore.fetchCategories();
   if (!isNewCourse.value) {
     await courseStore.fetchCourseDetails(courseId);
     if (courseStore.currentCourse) {
-      course.value = { ...courseStore.currentCourse };
+      course.value = { subcategory: '', ...courseStore.currentCourse };
     }
+  }
+});
+
+watch(() => course.value.category, () => {
+  if (course.value.subcategory && !availableSubcategories.value.includes(course.value.subcategory)) {
+    course.value.subcategory = '';
   }
 });
 
@@ -198,10 +217,12 @@ const editQuiz = () => {
   display: flex;
   gap: var(--space-24);
   margin-bottom: var(--space-24);
+  flex-wrap: wrap;
 }
 
 .form-row .form-group {
   flex: 1;
+  min-width: 220px;
   margin-bottom: 0;
 }
 </style>

@@ -38,9 +38,9 @@ const router = createRouter({
         {
           path: 'admin',
           component: () => import('../views/AdminView.vue'),
-          meta: { requiresAuth: true, requiresAdmin: true },
+          meta: { requiresAuth: true, requiresManager: true },
           children: [
-            { path: '', redirect: '/admin/dashboard' },
+            { path: '', redirect: '/admin/courses' },
 
             {
               path: 'courses',
@@ -55,7 +55,29 @@ const router = createRouter({
             {
               path: 'dashboard',
               name: 'admin-dashboard',
-              component: () => import('../views/admin/DashboardAdminView.vue')
+              component: () => import('../views/admin/DashboardAdminView.vue'),
+              meta: { requiresAdmin: true }
+            },
+            {
+              path: 'users',
+              name: 'admin-users',
+              component: () => import('../views/admin/UserRoleAdminView.vue'),
+              meta: { requiresAdmin: true }
+            },
+            {
+              path: 'categories',
+              name: 'admin-categories',
+              component: () => import('../views/admin/CategoryAdminView.vue')
+            },
+            {
+              path: 'assignments',
+              name: 'admin-assignments',
+              component: () => import('../views/admin/AssignmentAdminView.vue')
+            },
+            {
+              path: 'assignment-reports',
+              name: 'admin-assignment-reports',
+              component: () => import('../views/admin/AssignmentReportView.vue')
             },
             {
               path: 'help',
@@ -107,12 +129,15 @@ router.beforeEach((to, from, next) => {
   const authStore = useAuthStore();
   const requiresAuth = to.matched.some(record => record.meta.requiresAuth);
   const requiresAdmin = to.matched.some(record => record.meta.requiresAdmin);
+  const requiresManager = to.matched.some(record => record.meta.requiresManager);
 
   if (requiresAuth && !authStore.isLoggedIn) {
     // Redirect to home if not logged in
     next({ name: 'home' });
   } else if (requiresAdmin && !authStore.isAdmin) {
     // Redirect to home if not an admin
+    next({ name: 'home' });
+  } else if (requiresManager && !authStore.canManageCourses) {
     next({ name: 'home' });
   } else {
     // Otherwise, allow navigation

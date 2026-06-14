@@ -8,6 +8,7 @@ export const useCourseStore = defineStore('course', {
     courses: [], // To hold the list of all courses
     currentCourse: null, // To hold the currently selected course, its lessons, and quiz
     categories: [], // To hold the order of categories
+    categoryTree: [], // Top-level categories with optional subcategories
   }),
   getters: {
     // ... getters can be added later as needed
@@ -16,22 +17,56 @@ export const useCourseStore = defineStore('course', {
     async fetchCategories() {
       const configRef = doc(db, 'config', 'courseSettings');
       const configSnap = await getDoc(configRef);
-      if (configSnap.exists() && configSnap.data().categories) {
-        this.categories = configSnap.data().categories;
+      if (configSnap.exists()) {
+        const data = configSnap.data();
+        if (Array.isArray(data.categoryTree)) {
+          this.categoryTree = data.categoryTree.map((category) => ({
+            name: category.name,
+            subcategories: Array.isArray(category.subcategories) ? category.subcategories : [],
+          }));
+          this.categories = this.categoryTree.map(category => category.name);
+          return;
+        }
+        if (Array.isArray(data.categories)) {
+          this.categories = data.categories;
+          this.categoryTree = data.categories.map(name => ({ name, subcategories: [] }));
+          return;
+        }
       } else {
         // Fallback to a default order if not set in DB
-        this.categories = ['教育訓練', '商品教育', 'IG/電子報'];
       }
+      this.categories = ['教育訓練', '商品教育', 'IG/電子報'];
+      this.categoryTree = this.categories.map(name => ({ name, subcategories: [] }));
     },
     async updateCategoriesOrder(newOrder) {
       this.categories = newOrder; // Optimistic update
+      this.categoryTree = newOrder.map(name => this.categoryTree.find(category => category.name === name) || { name, subcategories: [] });
       const configRef = doc(db, 'config', 'courseSettings');
       try {
-        await setDoc(configRef, { categories: newOrder }, { merge: true });
+        await setDoc(configRef, { categories: newOrder, categoryTree: this.categoryTree }, { merge: true });
       } catch (error) {
         console.error("Error updating categories order: ", error);
         // Revert on error if needed, though optimistic update is usually fine here.
       }
+    },
+    async saveCategoryTree(categoryTree) {
+      const normalizedTree = categoryTree
+        .map(category => ({
+          name: category.name?.trim(),
+          subcategories: (category.subcategories || [])
+            .map(subcategory => subcategory.trim())
+            .filter(Boolean),
+        }))
+        .filter(category => category.name);
+
+      this.categoryTree = normalizedTree;
+      this.categories = normalizedTree.map(category => category.name);
+
+      const configRef = doc(db, 'config', 'courseSettings');
+      await setDoc(configRef, {
+        categories: this.categories,
+        categoryTree: normalizedTree,
+      }, { merge: true });
     },
     async fetchAllCourses() {
       const uiStore = useUiStore();
@@ -294,5 +329,4 @@ export const useCourseStore = defineStore('course', {
     }
   }
 })
-
 

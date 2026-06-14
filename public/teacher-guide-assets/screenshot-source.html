@@ -1,0 +1,368 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Teacher Guide Screenshots</title>
+  <style>
+    :root {
+      --primary: #4f46e5;
+      --primary-dark: #3730a3;
+      --bg: #fdfbf7;
+      --surface: #ffffff;
+      --text: #1e1b4b;
+      --muted: #64748b;
+      --line: #eef2f7;
+      --purple: #efeffc;
+      --orange: #fff1e6;
+      --blue: #eaf5ff;
+      --green: #ebf9ec;
+      --red: #fee2e2;
+      font-family: "Poppins", "Noto Sans TC", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; background: var(--bg); color: var(--text); }
+    .app {
+      width: 1440px;
+      height: 1024px;
+      display: grid;
+      grid-template-columns: 270px 1fr;
+      overflow: hidden;
+      background: var(--bg);
+    }
+    .sidebar {
+      padding: 28px 22px;
+      background: #fff;
+      border-right: 1px solid var(--line);
+      box-shadow: 2px 0 24px rgba(30, 27, 75, 0.04);
+    }
+    .brand {
+      font-size: 24px;
+      font-weight: 900;
+      color: var(--primary);
+      margin-bottom: 34px;
+    }
+    .role {
+      margin-bottom: 26px;
+      padding: 12px 16px;
+      border-radius: 18px;
+      background: var(--purple);
+      color: var(--primary-dark);
+      font-weight: 800;
+    }
+    .nav {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .nav-item {
+      padding: 14px 16px;
+      border-radius: 999px;
+      color: var(--muted);
+      font-weight: 800;
+    }
+    .nav-item.active {
+      background: var(--purple);
+      color: var(--primary-dark);
+    }
+    main {
+      padding: 44px 56px;
+      overflow: hidden;
+    }
+    h1 {
+      margin: 0 0 12px;
+      font-size: 40px;
+      line-height: 1.2;
+    }
+    h2 {
+      margin: 0;
+      font-size: 25px;
+      line-height: 1.25;
+    }
+    h3 {
+      margin: 0;
+      font-size: 20px;
+    }
+    p {
+      margin: 0;
+      color: var(--muted);
+      line-height: 1.65;
+      font-size: 16px;
+    }
+    .card {
+      background: white;
+      border-radius: 24px;
+      box-shadow: 0 16px 44px rgba(30, 27, 75, 0.07);
+    }
+    .button {
+      display: inline-flex;
+      justify-content: center;
+      align-items: center;
+      border-radius: 999px;
+      padding: 12px 22px;
+      background: var(--primary);
+      color: white;
+      font-weight: 900;
+      box-shadow: 0 10px 24px rgba(79, 70, 229, 0.25);
+    }
+    .button.light {
+      background: white;
+      color: var(--text);
+      box-shadow: inset 0 0 0 2px var(--line);
+    }
+    .button.danger {
+      background: #ef4444;
+      box-shadow: 0 10px 24px rgba(239, 68, 68, 0.18);
+    }
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      border-radius: 999px;
+      padding: 7px 14px;
+      background: var(--purple);
+      color: var(--primary);
+      font-weight: 900;
+      font-size: 14px;
+    }
+    .header {
+      display: flex;
+      align-items: flex-end;
+      justify-content: space-between;
+      margin-bottom: 28px;
+    }
+    .kanban {
+      display: grid;
+      gap: 20px;
+    }
+    .column {
+      padding: 22px;
+      background: var(--blue);
+      border-radius: 24px;
+    }
+    .column.orange { background: var(--orange); }
+    .column.green { background: var(--green); }
+    .column-head {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      margin-bottom: 16px;
+    }
+    .drag {
+      color: rgba(30, 27, 75, 0.28);
+      font-size: 22px;
+      font-weight: 900;
+    }
+    .count {
+      margin-left: auto;
+      background: white;
+      padding: 5px 12px;
+      border-radius: 999px;
+      font-weight: 900;
+      color: var(--primary);
+    }
+    .course-row {
+      display: grid;
+      grid-template-columns: 34px 1fr 170px;
+      gap: 14px;
+      align-items: center;
+      padding: 16px;
+      border-radius: 20px;
+      background: white;
+      margin-top: 10px;
+    }
+    .dot {
+      width: 12px;
+      height: 12px;
+      border-radius: 999px;
+      background: #22c55e;
+      display: inline-block;
+      margin-left: 8px;
+    }
+    .dot.draft { background: #f59e0b; }
+    .form-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 22px;
+    }
+    .field {
+      padding: 15px 18px;
+      border-radius: 18px;
+      background: #f8fafc;
+      color: var(--muted);
+      font-weight: 800;
+      min-height: 56px;
+    }
+    .field.tall { min-height: 112px; }
+    .section-card {
+      padding: 26px;
+      margin-top: 22px;
+    }
+    .lesson-row {
+      display: grid;
+      grid-template-columns: 36px 1fr 160px;
+      gap: 14px;
+      align-items: center;
+      padding: 16px;
+      border-radius: 18px;
+      background: #f8fafc;
+      margin-top: 12px;
+    }
+    .editor {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 24px;
+    }
+    .textarea {
+      min-height: 420px;
+      border-radius: 20px;
+      background: #f8fafc;
+      padding: 22px;
+      color: #334155;
+      font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+      line-height: 1.7;
+      white-space: pre-line;
+    }
+    .preview {
+      min-height: 420px;
+      border-radius: 20px;
+      display: grid;
+      place-items: center;
+      background: linear-gradient(135deg, #ffffff, #f5f7ff);
+      box-shadow: inset 0 0 0 1px var(--line);
+      text-align: center;
+      padding: 42px;
+    }
+    .prompt-box {
+      padding: 16px;
+      border-radius: 18px;
+      background: var(--purple);
+      margin-bottom: 16px;
+      color: var(--primary-dark);
+      font-weight: 800;
+      line-height: 1.65;
+    }
+    .question {
+      padding: 22px;
+      border-radius: 22px;
+      background: #fff;
+      margin-top: 18px;
+    }
+    .option-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin-top: 16px;
+    }
+    .option {
+      padding: 14px;
+      border-radius: 16px;
+      background: #f8fafc;
+      color: var(--muted);
+      font-weight: 800;
+    }
+    .json {
+      padding: 22px;
+      border-radius: 22px;
+      background: #111827;
+      color: #e5e7eb;
+      line-height: 1.7;
+      font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+      white-space: pre;
+      min-height: 410px;
+    }
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+  <script>
+    const screen = new URLSearchParams(location.search).get('screen') || 'admin';
+    const nav = (active) => `
+      <aside class="sidebar">
+        <div class="brand">Eduhouse 2.0</div>
+        <div class="role">Teacher 後台</div>
+        <div class="nav">
+          ${['儀表板', '課程管理', '教師指南'].map((item) => `<div class="nav-item ${item === active ? 'active' : ''}">${item}</div>`).join('')}
+        </div>
+      </aside>`;
+    const shell = (active, content) => `<div class="app">${nav(active)}<main>${content}</main></div>`;
+    const screens = {
+      admin: shell('課程管理', `
+        <div class="header"><div><h1>課程教材管理</h1><p>拖曳排序課程分類與內容，規劃學員的學習路徑。</p></div><div class="button">+ 新增課程</div></div>
+        <section class="kanban">
+          <div class="column"><div class="column-head"><span class="drag">⋮⋮</span><h2>教育訓練</h2><span class="count">2</span></div>
+            <div class="course-row"><span class="drag">::</span><div><h3>新人門市服務流程 <span class="dot"></span></h3><p>4 單元 · 已上架</p></div><div style="display:flex; gap:10px;"><span class="button light">編輯</span><span class="button danger">刪除</span></div></div>
+            <div class="course-row"><span class="drag">::</span><div><h3>用藥安全基礎 <span class="dot"></span></h3><p>3 單元 · 已上架</p></div><div style="display:flex; gap:10px;"><span class="button light">編輯</span><span class="button danger">刪除</span></div></div>
+          </div>
+          <div class="column orange"><div class="column-head"><span class="drag">⋮⋮</span><h2>商品教育</h2><span class="count">1</span></div>
+            <div class="course-row"><span class="drag">::</span><div><h3>常見保健品介紹 <span class="dot draft"></span></h3><p>2 單元 · 草稿</p></div><div style="display:flex; gap:10px;"><span class="button light">編輯</span><span class="button danger">刪除</span></div></div>
+          </div>
+        </section>
+      `),
+      course: shell('課程管理', `
+        <div class="header"><div><h1>編輯課程</h1><p>設定課程基本資料、上架狀態、單元與測驗。</p></div><div class="button">儲存課程</div></div>
+        <section class="section-card card">
+          <div class="form-grid"><div><h3>課程標題</h3><div class="field">新人門市服務流程</div></div><div><h3>課程分類</h3><div class="field">教育訓練</div></div><div><h3>課程描述</h3><div class="field tall">協助新人熟悉門市接待、商品說明與後續追蹤流程。</div></div><div><h3>上架狀態</h3><div class="field">已上架</div></div></div>
+        </section>
+        <section class="section-card card">
+          <div class="header" style="margin-bottom:8px;"><div><h2>課程單元管理</h2><p>新增、編輯、刪除或拖曳排序單元。</p></div><div class="button">新增單元</div></div>
+          <div class="lesson-row"><span class="drag">::</span><div><h3>1. 接待與需求確認</h3><p>開場、聆聽與確認需求。</p></div><div style="display:flex; gap:10px;"><span class="button light">編輯</span><span class="button danger">刪除</span></div></div>
+          <div class="lesson-row"><span class="drag">::</span><div><h3>2. 商品說明重點</h3><p>成分、用法與注意事項。</p></div><div style="display:flex; gap:10px;"><span class="button light">編輯</span><span class="button danger">刪除</span></div></div>
+        </section>
+      `),
+      lesson: shell('課程管理', `
+        <div class="header"><div><h1>編輯課程單元</h1><p>撰寫 Markdown 內容，右側同步預覽投影片。</p></div><div class="button">儲存單元</div></div>
+        <section class="editor">
+          <div class="card section-card" style="margin-top:0;">
+            <h2>單元內容 Markdown</h2>
+            <div class="prompt-box">圖片 Prompt 請包含：風格、光線、主體、場景、構圖、情緒或用途。</div>
+            <div class="textarea"># 商品說明重點
+
+先確認需求，再說明重點。
+
+---
+
+## 圖片 Prompt
+溫暖寫實攝影風格，午後柔和自然光，一位藥師在明亮藥局櫃台前整理保健品，近景構圖，乾淨專業、親切可信。</div>
+          </div>
+          <div class="card section-card" style="margin-top:0;">
+            <h2>投影片預覽</h2>
+            <div class="preview"><div><span class="pill">Slide 2</span><h1 style="margin-top:20px;">商品說明重點</h1><p>確認需求、說明用法、提醒注意事項。</p></div></div>
+          </div>
+        </section>
+      `),
+      quiz: shell('課程管理', `
+        <div class="header"><div><h1>編輯測驗</h1><p>建立課程總測驗或單元小測驗，設定題目、選項、正確答案與解釋。</p></div><div class="button">儲存測驗</div></div>
+        <section class="section-card card">
+          <h2>測驗標題</h2>
+          <div class="field" style="margin-top:12px;">新人門市服務流程_單元測驗</div>
+          <div class="question">
+            <div style="display:flex; justify-content:space-between; align-items:center;"><h2>問題 1：向顧客介紹商品前，第一步應該做什麼？</h2><span class="pill">展開</span></div>
+            <div class="option-grid"><div class="option">A. 先了解顧客需求</div><div class="option">B. 直接推薦最高價商品</div><div class="option">C. 只照包裝文字念</div><div class="option">D. 立即請顧客結帳</div></div>
+            <div class="field" style="margin-top:16px;">正確答案：A. 先了解顧客需求</div>
+          </div>
+          <div style="display:flex; justify-content:flex-end; gap:12px; margin-top:22px;"><span class="button light">上傳 JSON</span><span class="button">新增問題</span></div>
+        </section>
+      `),
+      json: shell('課程管理', `
+        <div class="header"><div><h1>使用 JSON 快速建立測驗</h1><p>大量題目可用 JSON 匯入，匯入後仍需檢查題目與答案。</p></div><div class="button light">上傳 JSON</div></div>
+        <div class="json">{
+  "title": "課程期末測驗",
+  "questions": [
+    {
+      "question": "向顧客介紹商品前，第一步應該做什麼？",
+      "options": [
+        "先了解顧客需求",
+        "直接推薦最高價商品",
+        "只照包裝文字念"
+      ],
+      "correct": 0,
+      "explanation": "先確認需求，才能提供合適且負責任的說明。"
+    }
+  ]
+}</div>
+      `)
+    };
+    document.getElementById('root').innerHTML = screens[screen] || screens.admin;
+  </script>
+</body>
+</html>

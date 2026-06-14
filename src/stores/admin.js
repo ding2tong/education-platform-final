@@ -7,11 +7,25 @@ import { useCourseStore } from './course';
 export const useAdminStore = defineStore('admin', {
   state: () => ({
     studentList: [],
+    userList: [],
   }),
   actions: {
+    async fetchAllUsers() {
+      const authStore = useAuthStore();
+      if (!authStore.canManageUsers) {
+        this.userList = [];
+        return;
+      }
+      const usersCollection = collection(db, 'users');
+      const usersSnapshot = await getDocs(usersCollection);
+      this.userList = usersSnapshot.docs
+        .map(userDoc => ({ uid: userDoc.id, ...userDoc.data() }))
+        .sort((a, b) => (a.fullName || a.displayName || '').localeCompare(b.fullName || b.displayName || ''));
+    },
+
     async fetchAllStudents() {
       const authStore = useAuthStore();
-      if (!authStore.isAdmin) {
+      if (!authStore.canManageUsers) {
         this.studentList = [];
         return;
       }
@@ -21,7 +35,7 @@ export const useAdminStore = defineStore('admin', {
       usersSnapshot.forEach(doc => {
         // We can fetch all users and filter on the client, or add a where clause
         // For simplicity and depending on the number of users, client-side filter is okay for now.
-        if (doc.data().role !== 'admin') {
+        if (!doc.data().role || doc.data().role === 'student') {
             students.push({ uid: doc.id, ...doc.data() });
         }
       });
@@ -30,15 +44,29 @@ export const useAdminStore = defineStore('admin', {
 
     async adminUpdateUserProfile(userId, profileData) {
       const authStore = useAuthStore();
-      if (!authStore.isAdmin) throw new Error('僅管理員可執行此操作');
+      if (!authStore.canManageUsers) throw new Error('僅管理員可執行此操作');
       const userDocRef = doc(db, 'users', userId);
       await updateDoc(userDocRef, { fullName: profileData.fullName, branch: profileData.branch });
       await this.fetchAllStudents(); // Refresh the list
     },
 
+    async adminUpdateUserRole(userId, role) {
+      const authStore = useAuthStore();
+      const allowedRoles = ['student', 'teacher', 'admin'];
+      if (!authStore.canManageUsers) throw new Error('僅管理員可執行此操作');
+      if (!allowedRoles.includes(role)) throw new Error('無效的角色');
+      if (authStore.currentUser?.uid === userId && role !== 'admin') {
+        throw new Error('不可移除自己的管理員權限');
+      }
+      const userDocRef = doc(db, 'users', userId);
+      await updateDoc(userDocRef, { role });
+      await this.fetchAllUsers();
+      await this.fetchAllStudents();
+    },
+
     async fetchStudentProgressData(userId) {
       const authStore = useAuthStore();
-      if (!authStore.isAdmin) return {};
+      if (!authStore.canManageUsers) return {};
 
       const progressCollectionRef = collection(db, `users/${userId}/progress`);
       const progressSnapshot = await getDocs(progressCollectionRef);
@@ -66,7 +94,7 @@ export const useAdminStore = defineStore('admin', {
 
     async fetchAllStudentProgress() {
       const authStore = useAuthStore();
-      if (!authStore.isAdmin) return [];
+      if (!authStore.canManageUsers) return [];
 
       const courseStore = useCourseStore();
       await courseStore.fetchAllCourses();

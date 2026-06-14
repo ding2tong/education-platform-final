@@ -27,6 +27,22 @@ describe('Auth Store', () => {
     expect(authStore.isAdmin).toBe(false);
   });
 
+  it('canManageCourses returns true for teacher and admin users', () => {
+    const authStore = useAuthStore();
+    authStore.currentUser = { role: 'teacher' };
+    expect(authStore.canManageCourses).toBe(true);
+    authStore.currentUser = { role: 'admin' };
+    expect(authStore.canManageCourses).toBe(true);
+  });
+
+  it('canManageUsers returns true only for admin users', () => {
+    const authStore = useAuthStore();
+    authStore.currentUser = { role: 'teacher' };
+    expect(authStore.canManageUsers).toBe(false);
+    authStore.currentUser = { role: 'admin' };
+    expect(authStore.canManageUsers).toBe(true);
+  });
+
   it('isLoggedIn returns true when currentUser is set', () => {
     const authStore = useAuthStore();
     authStore.currentUser = { uid: '123' };

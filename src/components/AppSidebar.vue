@@ -64,7 +64,7 @@ const logout = () => {
         <span class="nav-text" v-show="!uiStore.sidebarCollapsed">我的進度</span>
       </router-link>
 
-      <template v-if="authStore.isAdmin">
+      <template v-if="authStore.canManageCourses">
         <div class="nav-divider"></div>
         <router-link to="/admin" class="nav-item admin-nav-item" :title="uiStore.sidebarCollapsed ? '管理後台' : ''">
           <span class="nav-dot admin-dot"></span>

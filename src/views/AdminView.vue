@@ -7,11 +7,23 @@
 
     <div class="admin-tabs-container">
       <div class="admin-tabs card">
-        <router-link to="/admin/dashboard" class="tab-btn">
+        <router-link v-if="authStore.canManageUsers" to="/admin/dashboard" class="tab-btn">
           學員進度總覽
+        </router-link>
+        <router-link v-if="authStore.canManageUsers" to="/admin/users" class="tab-btn">
+          帳號權限管理
         </router-link>
         <router-link to="/admin/courses" class="tab-btn">
           課程教材管理
+        </router-link>
+        <router-link to="/admin/categories" class="tab-btn">
+          課程分類管理
+        </router-link>
+        <router-link to="/admin/assignments" class="tab-btn">
+          指定課程任務
+        </router-link>
+        <router-link to="/admin/assignment-reports" class="tab-btn">
+          任務完成報表
         </router-link>
       </div>
     </div>
@@ -27,7 +39,9 @@
 </template>
 
 <script setup>
-// No logic needed for this layout component
+import { useAuthStore } from '@/stores/auth';
+
+const authStore = useAuthStore();
 </script>
 
 <style scoped>
@@ -94,6 +108,8 @@
   .admin-tabs {
     width: 100%;
     justify-content: center;
+    flex-wrap: wrap;
+    border-radius: var(--radius-lg);
   }
 }
 </style>

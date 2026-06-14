@@ -33,6 +33,9 @@ export const useAuthStore = defineStore('auth', {
   getters: {
     isLoggedIn: (state) => !!state.currentUser,
     isAdmin: (state) => state.currentUser?.role === 'admin',
+    isTeacher: (state) => state.currentUser?.role === 'teacher',
+    canManageCourses: (state) => ['admin', 'teacher'].includes(state.currentUser?.role),
+    canManageUsers: (state) => state.currentUser?.role === 'admin',
   },
   actions: {
     init() {

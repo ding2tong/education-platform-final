@@ -1,0 +1,105 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    function currentRole() {
+      return signedIn() && exists(/databases/$(database)/documents/users/$(request.auth.uid))
+        ? get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role
+        : null;
+    }
+
+    function isAdmin() {
+      return currentRole() == 'admin';
+    }
+
+    function canManageCourses() {
+      return currentRole() in ['admin', 'teacher'];
+    }
+
+    function isSelf(userId) {
+      return signedIn() && request.auth.uid == userId;
+    }
+
+    function isCreatingOwnStudentProfile(userId) {
+      return isSelf(userId)
+        && request.resource.data.role == 'student'
+        && request.resource.data.keys().hasOnly([
+          'displayName',
+          'email',
+          'role',
+          'createdAt',
+          'fullName',
+          'branch'
+        ]);
+    }
+
+    function isUpdatingOwnProfile() {
+      return request.resource.data.diff(resource.data).changedKeys().hasOnly([
+        'fullName',
+        'branch'
+      ]);
+    }
+
+    function isValidRoleUpdate() {
+      return !request.resource.data.keys().hasAny(['role'])
+        || request.resource.data.role in ['student', 'teacher', 'admin'];
+    }
+
+    function isAdminUserUpdate() {
+      return request.resource.data.diff(resource.data).changedKeys().hasOnly([
+        'fullName',
+        'branch',
+        'role'
+      ]) && isValidRoleUpdate();
+    }
+
+    match /users/{userId} {
+      allow create: if isCreatingOwnStudentProfile(userId) || isAdmin();
+      allow get: if isSelf(userId) || canManageCourses();
+      allow list: if canManageCourses();
+      allow update: if (isSelf(userId) && isUpdatingOwnProfile())
+        || (isAdmin() && isAdminUserUpdate());
+      allow delete: if false;
+
+      match /progress/{courseId} {
+        allow read: if isSelf(userId) || canManageCourses();
+        allow create, update: if isSelf(userId);
+        allow delete: if isAdmin();
+      }
+
+      match /quizResults/{resultId} {
+        allow read: if isSelf(userId) || canManageCourses();
+        allow create, update, delete: if isSelf(userId);
+      }
+    }
+
+    match /courses/{courseId} {
+      allow read: if signedIn();
+      allow create, update, delete: if canManageCourses();
+
+      match /lessons/{lessonId} {
+        allow read: if signedIn();
+        allow create, update, delete: if canManageCourses();
+      }
+
+      match /quizzes/{quizId} {
+        allow read: if signedIn();
+        allow create, update, delete: if canManageCourses();
+      }
+    }
+
+    match /assignments/{assignmentId} {
+      allow get, list: if signedIn();
+      allow create, update, delete: if canManageCourses();
+    }
+
+    match /config/{configId} {
+      allow read: if signedIn();
+      allow create, update, delete: if canManageCourses();
+    }
+  }
+}

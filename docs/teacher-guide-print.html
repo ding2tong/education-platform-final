@@ -1,0 +1,176 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8">
+  <title>教學平台使用手冊 - 教師指南</title>
+  <style>
+    @page { size: A4; margin: 16mm; }
+    body {
+      margin: 0;
+      color: #1e1b4b;
+      background: #fff;
+      font-family: "Noto Sans TC", "PingFang TC", "Microsoft JhengHei", Arial, sans-serif;
+      font-size: 11.2pt;
+      line-height: 1.65;
+    }
+    h1 { margin: 0 0 8pt; font-size: 25pt; color: #3730a3; line-height: 1.2; }
+    h2 {
+      break-after: avoid;
+      margin: 22pt 0 8pt;
+      font-size: 17pt;
+      border-left: 5pt solid #4f46e5;
+      padding-left: 9pt;
+    }
+    h3 { break-after: avoid; margin: 14pt 0 6pt; font-size: 13pt; }
+    p { margin: 0 0 8pt; }
+    ul, ol { margin: 0 0 10pt 18pt; padding: 0; }
+    li { margin: 2pt 0; }
+    code {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      background: #f1f5f9;
+      padding: 1pt 3pt;
+      border-radius: 3pt;
+    }
+    pre {
+      white-space: pre-wrap;
+      background: #111827;
+      color: #e5e7eb;
+      padding: 10pt;
+      border-radius: 10pt;
+      font-size: 9.2pt;
+      line-height: 1.45;
+    }
+    .cover {
+      padding: 22pt;
+      border-radius: 18pt;
+      background: #f5f3ff;
+      margin-bottom: 16pt;
+    }
+    .note {
+      padding: 10pt 12pt;
+      border-radius: 12pt;
+      background: #f8fafc;
+      border: 1pt solid #e2e8f0;
+      color: #475569;
+      margin: 8pt 0 14pt;
+    }
+    .figure {
+      break-inside: avoid;
+      margin: 10pt 0 14pt;
+    }
+    .figure img {
+      width: 100%;
+      border: 1pt solid #e2e8f0;
+      border-radius: 10pt;
+      box-shadow: 0 6pt 18pt rgba(30, 27, 75, 0.08);
+    }
+    .caption {
+      color: #64748b;
+      font-size: 9.5pt;
+      text-align: center;
+      margin-top: 4pt;
+    }
+    .grid {
+      display: grid;
+      gap: 7pt;
+      margin: 8pt 0 12pt;
+    }
+    .item {
+      padding: 8pt 10pt;
+      border-radius: 10pt;
+      background: #fdfbf7;
+      border: 1pt solid #f1f5f9;
+    }
+    strong { color: #3730a3; }
+  </style>
+</head>
+<body>
+  <section class="cover">
+    <h1>教學平台使用手冊 - 教師指南</h1>
+    <p>本手冊引導教師建立、管理課程內容以及製作測驗，協助快速完成教育訓練教材上架。</p>
+  </section>
+
+  <h2>Part 1: 課程管理</h2>
+  <p>課程是所有教學內容的基礎。您可以建立不同的課程，並在其中新增多個教學單元。</p>
+  <div class="figure"><img src="../public/teacher-guide-assets/01-course-admin.png" alt="課程教材管理畫面"><div class="caption">課程教材管理畫面</div></div>
+  <p>在「課程教材管理」頁面中，教師可以快速掌握所有課程的分類、排序、上架狀態與單元數。</p>
+
+  <h3>1.1 如何新增課程</h3>
+  <ol>
+    <li><strong>登入後台：</strong>使用教師帳號登入系統。</li>
+    <li><strong>進入課程管理：</strong>在左側管理選單點擊「課程管理」。</li>
+    <li><strong>點擊新增課程：</strong>在課程列表頁右上角點擊「新增課程」。</li>
+    <li><strong>填寫課程資訊：</strong>輸入課程標題、描述、分類與上架狀態。</li>
+    <li><strong>儲存課程：</strong>儲存後會進入課程編輯頁，可開始新增單元。</li>
+  </ol>
+
+  <h3>1.2 如何編輯現有課程</h3>
+  <div class="figure"><img src="../public/teacher-guide-assets/02-course-edit.png" alt="課程編輯與單元管理畫面"><div class="caption">課程編輯與單元管理畫面</div></div>
+  <div class="grid"><div class="item"><strong>課程基本資料：</strong>設定課程標題、描述、分類與上架狀態。</div><div class="item"><strong>課程單元管理：</strong>新增單元、編輯單元、刪除單元，或拖曳調整學習順序。</div></div>
+  <div class="note">建議先以「草稿」建立課程，確認單元與測驗都完成後，再改為「已上架」。</div>
+
+  <h2>Part 2: 單元管理</h2>
+  <p>單元是課程的具體教學內容。每個課程可以包含多個單元。</p>
+  <div class="figure"><img src="../public/teacher-guide-assets/03-lesson-editor.png" alt="單元 Markdown 編輯與投影片預覽畫面"><div class="caption">單元 Markdown 編輯與投影片預覽畫面</div></div>
+
+  <h3>2.1 在課程中新增單元</h3>
+  <ol>
+    <li>進入課程編輯頁面。</li>
+    <li>在「課程單元管理」區塊點擊「新增單元」。</li>
+    <li>填寫單元標題、單元描述與 Markdown 內容。</li>
+    <li>完成後點擊「儲存單元」。</li>
+  </ol>
+
+  <h3>2.2 編輯單元內容 (Markdown)</h3>
+  <p>平台使用 Markdown 撰寫內容，並整合 Reveal.js 製作投影片。每張投影片之間使用獨立一行 <code>---</code> 分隔。</p>
+  <pre># 投影片 1 的標題
+
+這是第一張投影片的內容。
+
+---
+
+# 投影片 2 的標題
+
+- 這是第二張投影片的項目符號。
+- 您可以繼續新增內容。</pre>
+
+  <h3>圖片提示詞撰寫規範</h3>
+  <p>圖片提示詞需具體且具畫面感，避免只寫「藥局圖片」、「保健品照片」這類籠統描述。</p>
+  <div class="grid">
+    <div class="item"><strong>公式：</strong><code>[風格]，[光線]，[主體] 在 [場景]，[構圖/鏡頭]，[情緒/品牌感/用途]。</code></div>
+    <div class="item"><strong>範例：</strong>溫暖寫實攝影風格，午後柔和自然光，一位藥師在明亮藥局櫃台前整理保健品，近景構圖，乾淨專業、親切可信，適合教育訓練投影片封面。</div>
+  </div>
+  <ul><li>是否能想像畫面中的主體？</li><li>是否說明光線與風格？</li><li>是否包含場景與構圖？</li><li>是否符合課程用途與品牌感？</li></ul>
+
+  <h3>嵌入外部內容</h3>
+  <p>可使用 <code>&lt;iframe&gt;</code> HTML 標籤嵌入 YouTube 影片或外部網頁。建議貼入後先查看右側投影片預覽是否正常。</p>
+
+  <h2>Part 3: 測驗製作</h2>
+  <p>教師可以為整個課程或特定單元建立測驗，以評估學生學習成效。</p>
+  <div class="figure"><img src="../public/teacher-guide-assets/04-quiz-editor.png" alt="測驗編輯畫面"><div class="caption">測驗編輯畫面</div></div>
+
+  <h3>3.1 建立課程總測驗或單元小測驗</h3>
+  <ol><li>課程總測驗：進入課程編輯頁面，找到「測驗內容管理」。</li><li>單元小測驗：進入單元編輯頁面，找到「單元小測驗」。</li><li>點擊「編輯測驗」進入測驗編輯器。</li></ol>
+
+  <h3>3.2 手動新增與編輯題目</h3>
+  <ol><li>點擊「新增問題」。</li><li>填寫問題與選項。</li><li>選擇正確答案。</li><li>填寫解釋，讓學生完成測驗後能理解原因。</li><li>重複新增題目並儲存測驗。</li></ol>
+
+  <h3>3.3 使用 JSON 檔案快速建立測驗</h3>
+  <div class="figure"><img src="../public/teacher-guide-assets/05-json-import.png" alt="JSON 匯入測驗格式示意"><div class="caption">JSON 匯入測驗格式示意</div></div>
+  <p>大量題目可使用 JSON 匯入。匯入後請務必再次檢查題目、選項與正確答案。</p>
+  <pre>{
+  "title": "課程期末測驗",
+  "questions": [
+    {
+      "question": "Vue 3 的主要響應式 API 是什麼？",
+      "options": ["Options API", "Composition API", "React Hooks"],
+      "correct": 1,
+      "explanation": "Composition API 是 Vue 3 的核心新功能。"
+    }
+  ]
+}</pre>
+
+  <h2>上架前檢查</h2>
+  <ul><li>課程標題與描述清楚。</li><li>課程分類正確。</li><li>單元順序符合學生學習流程。</li><li>Markdown 投影片預覽正常。</li><li>圖片提示詞具體、可執行。</li><li>測驗題目、答案與解釋皆已檢查。</li><li>確認無誤後，再將課程狀態改為「已上架」。</li></ul>
+</body>
+</html>
