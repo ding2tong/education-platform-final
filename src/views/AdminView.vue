@@ -16,13 +16,13 @@
         <router-link to="/admin/courses" class="tab-btn">
           課程教材管理
         </router-link>
-        <router-link to="/admin/categories" class="tab-btn">
+        <router-link v-if="authStore.isAdmin" to="/admin/categories" class="tab-btn">
           課程分類管理
         </router-link>
-        <router-link to="/admin/assignments" class="tab-btn">
+        <router-link v-if="authStore.isAdmin" to="/admin/assignments" class="tab-btn">
           指定課程任務
         </router-link>
-        <router-link to="/admin/assignment-reports" class="tab-btn">
+        <router-link v-if="authStore.isAdmin" to="/admin/assignment-reports" class="tab-btn">
           任務完成報表
         </router-link>
       </div>

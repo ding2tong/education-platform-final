@@ -67,17 +67,20 @@ const router = createRouter({
             {
               path: 'categories',
               name: 'admin-categories',
-              component: () => import('../views/admin/CategoryAdminView.vue')
+              component: () => import('../views/admin/CategoryAdminView.vue'),
+              meta: { requiresAdmin: true }
             },
             {
               path: 'assignments',
               name: 'admin-assignments',
-              component: () => import('../views/admin/AssignmentAdminView.vue')
+              component: () => import('../views/admin/AssignmentAdminView.vue'),
+              meta: { requiresAdmin: true }
             },
             {
               path: 'assignment-reports',
               name: 'admin-assignment-reports',
-              component: () => import('../views/admin/AssignmentReportView.vue')
+              component: () => import('../views/admin/AssignmentReportView.vue'),
+              meta: { requiresAdmin: true }
             },
             {
               path: 'help',
