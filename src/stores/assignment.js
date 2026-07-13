@@ -130,9 +130,13 @@ export const useAssignmentStore = defineStore('assignment', {
       const lessonIds = course?.lessons?.map(lesson => lesson.id) || []
 
       const usersSnapshot = await getDocs(collection(db, 'users'))
+      const teacherBranch = authStore.isTeacher ? authStore.currentUser?.branch || '' : ''
       const targetUsers = usersSnapshot.docs
         .map(userDoc => ({ uid: userDoc.id, ...userDoc.data() }))
-        .filter(user => isStudentUser(user) && assignmentTargetsUser(assignment, user))
+        .filter(user => {
+          const branchAllowed = authStore.isTeacher ? !!teacherBranch && user.branch === teacherBranch : true
+          return isStudentUser(user) && assignmentTargetsUser(assignment, user) && branchAllowed
+        })
 
       const rows = []
       for (const user of targetUsers) {

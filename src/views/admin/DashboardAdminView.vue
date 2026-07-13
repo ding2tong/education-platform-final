@@ -2,8 +2,8 @@
   <div class="admin-dashboard">
     <div class="header-container">
       <div class="title-group">
-        <h2 class="section-title">學員學習數據</h2>
-        <p class="section-subtitle">即時追蹤各分店學員的課程進度與測驗表現</p>
+        <h2 class="section-title">{{ authStore.isTeacher ? '本店學習狀況' : '學員學習數據' }}</h2>
+        <p class="section-subtitle">{{ pageSubtitle }}</p>
       </div>
       <div class="header-actions">
         <div class="view-toggle-container">
@@ -52,7 +52,7 @@
 
     <!-- Filters -->
     <div class="filters-container card">
-      <div class="filter-item">
+      <div class="filter-item" v-if="authStore.isAdmin">
         <label class="filter-label">分店篩選</label>
         <select class="soft-select" v-model="selectedBranch">
           <option value="">所有分店</option>
@@ -60,6 +60,10 @@
             {{ branch }}
           </option>
         </select>
+      </div>
+      <div class="filter-item" v-else>
+        <label class="filter-label">分店</label>
+        <div class="branch-scope">{{ teacherBranchLabel }}</div>
       </div>
       <div class="filter-item" v-if="viewMode === 'table'">
         <label class="filter-label">課程篩選</label>
@@ -150,11 +154,13 @@
 import { ref, onMounted, computed } from 'vue';
 import { useAdminStore } from '@/stores/admin';
 import { useCourseStore } from '@/stores/course';
+import { useAuthStore } from '@/stores/auth';
 import { formOptions } from '@/config/forms';
 import AdminStudentCard from '@/components/AdminStudentCard.vue';
 
 const adminStore = useAdminStore();
 const courseStore = useCourseStore();
+const authStore = useAuthStore();
 const allProgress = ref([]);
 const loading = ref(true);
 const selectedBranch = ref('');
@@ -163,12 +169,22 @@ const viewMode = ref('card');
 
 onMounted(async () => {
   loading.value = true;
+  selectedBranch.value = authStore.isTeacher ? authStore.currentUser?.branch || '' : '';
   await Promise.all([
     courseStore.fetchAllCourses(),
     adminStore.fetchAllStudents()
   ]);
   allProgress.value = await adminStore.fetchAllStudentProgress();
   loading.value = false;
+});
+
+const teacherBranchLabel = computed(() => authStore.currentUser?.branch || '未設定分店');
+
+const pageSubtitle = computed(() => {
+  if (authStore.isTeacher) {
+    return `只顯示 ${teacherBranchLabel.value} 學員的課程進度與測驗表現`;
+  }
+  return '即時追蹤各分店學員的課程進度與測驗表現';
 });
 
 const studentsByBranch = computed(() => {
@@ -379,6 +395,15 @@ const exportToCSV = () => {
 
 .soft-select:focus {
   border-color: var(--color-primary);
+}
+
+.branch-scope {
+  padding: 10px 16px;
+  border-radius: var(--radius-md);
+  border: 2px solid var(--color-secondary);
+  background: white;
+  color: var(--color-text);
+  font-weight: var(--font-weight-medium);
 }
 
 /* Branch Sections */

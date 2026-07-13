@@ -7,8 +7,8 @@
 
     <div class="admin-tabs-container">
       <div class="admin-tabs card">
-        <router-link v-if="authStore.canManageUsers" to="/admin/dashboard" class="tab-btn">
-          學員進度總覽
+        <router-link to="/admin/dashboard" class="tab-btn">
+          {{ authStore.isTeacher ? '本店學習狀況' : '學員進度總覽' }}
         </router-link>
         <router-link v-if="authStore.canManageUsers" to="/admin/users" class="tab-btn">
           帳號權限管理

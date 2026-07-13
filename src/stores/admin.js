@@ -1,6 +1,6 @@
 import { defineStore } from 'pinia';
 import { db } from '@/plugins/firebase';
-import { collection, getDocs, doc, updateDoc, query, where } from 'firebase/firestore';
+import { collection, getDoc, getDocs, doc, updateDoc } from 'firebase/firestore';
 import { useAuthStore } from './auth';
 import { useCourseStore } from './course';
 
@@ -25,17 +25,21 @@ export const useAdminStore = defineStore('admin', {
 
     async fetchAllStudents() {
       const authStore = useAuthStore();
-      if (!authStore.canManageUsers) {
+      if (!authStore.canManageCourses) {
         this.studentList = [];
         return;
       }
       const usersCollection = collection(db, 'users');
       const usersSnapshot = await getDocs(usersCollection);
+      const teacherBranch = authStore.isTeacher ? authStore.currentUser?.branch || '' : '';
       const students = [];
       usersSnapshot.forEach(doc => {
         // We can fetch all users and filter on the client, or add a where clause
         // For simplicity and depending on the number of users, client-side filter is okay for now.
-        if (!doc.data().role || doc.data().role === 'student') {
+        const user = doc.data();
+        const isStudent = !user.role || user.role === 'student';
+        const canViewBranch = authStore.isTeacher ? !!teacherBranch && user.branch === teacherBranch : true;
+        if (isStudent && canViewBranch) {
             students.push({ uid: doc.id, ...doc.data() });
         }
       });
@@ -66,7 +70,12 @@ export const useAdminStore = defineStore('admin', {
 
     async fetchStudentProgressData(userId) {
       const authStore = useAuthStore();
-      if (!authStore.canManageUsers) return {};
+      if (!authStore.canManageCourses) return {};
+      if (authStore.isTeacher) {
+        const userSnapshot = await getDoc(doc(db, 'users', userId));
+        const user = userSnapshot.exists() ? userSnapshot.data() : null;
+        if (!authStore.currentUser?.branch || user?.branch !== authStore.currentUser.branch) return {};
+      }
 
       const progressCollectionRef = collection(db, `users/${userId}/progress`);
       const progressSnapshot = await getDocs(progressCollectionRef);
@@ -94,7 +103,7 @@ export const useAdminStore = defineStore('admin', {
 
     async fetchAllStudentProgress() {
       const authStore = useAuthStore();
-      if (!authStore.canManageUsers) return [];
+      if (!authStore.canManageCourses) return [];
 
       const courseStore = useCourseStore();
       await courseStore.fetchAllCourses();
