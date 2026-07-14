@@ -12,7 +12,7 @@
 
     <draggable
       class="kanban-board"
-      :list="courseCategories"
+      :list="displayCategories"
       group="categories"
       item-key="category"
       handle=".column-drag-handle"
@@ -100,6 +100,7 @@ const courseStore = useCourseStore();
 const router = useRouter();
 
 const { categories: courseCategories } = storeToRefs(courseStore);
+const UNCATEGORIZED_CATEGORY = '未分類';
 
 const showDeleteModal = ref(false);
 const courseToDelete = ref(null);
@@ -109,14 +110,32 @@ onMounted(() => {
   courseStore.fetchCategories();
 });
 
+const displayCategories = computed({
+  get() {
+    const categories = [...courseCategories.value];
+    courseStore.courses.forEach((course) => {
+      const category = course.category || UNCATEGORIZED_CATEGORY;
+      if (!categories.includes(category)) {
+        categories.push(category);
+      }
+    });
+    return categories;
+  },
+  set(newOrder) {
+    courseCategories.value = newOrder;
+  }
+});
+
 const coursesByCategory = computed(() => {
   const grouped = {};
-  courseCategories.value.forEach(cat => grouped[cat] = []);
+  displayCategories.value.forEach(cat => grouped[cat] = []);
 
   courseStore.courses.forEach(course => {
-    if (grouped[course.category]) {
-      grouped[course.category].push(course);
+    const category = course.category || UNCATEGORIZED_CATEGORY;
+    if (!grouped[category]) {
+      grouped[category] = [];
     }
+    grouped[category].push(course);
   });
 
   for (const category in grouped) {
@@ -136,7 +155,7 @@ const onCourseDragEnd = (category, event) => {
 };
 
 const onCategoryDragEnd = () => {
-  courseStore.updateCategoriesOrder(courseCategories.value);
+  courseStore.updateCategoriesOrder(displayCategories.value);
 };
 
 const goToEditPage = (courseId) => {

@@ -17,6 +17,9 @@
               <label class="form-label">課程分類</label>
               <select class="form-control" v-model="course.category" required>
                 <option disabled value="">請選擇分類</option>
+                <option v-if="currentCategoryMissing" :value="course.category">
+                  {{ course.category }}（未列於分類設定）
+                </option>
                 <option v-for="category in courseStore.categoryTree" :key="category.name" :value="category.name">
                   {{ category.name }}
                 </option>
@@ -109,6 +112,9 @@ const lessons = computed(() => courseStore.currentCourse?.lessons || []);
 const quiz = computed(() => courseStore.currentCourse?.quiz || { questions: [] });
 const availableSubcategories = computed(() => {
   return courseStore.categoryTree.find(category => category.name === course.value.category)?.subcategories || [];
+});
+const currentCategoryMissing = computed(() => {
+  return !!course.value.category && !courseStore.categoryTree.some(category => category.name === course.value.category);
 });
 
 // Keep localLessons in sync with the store
