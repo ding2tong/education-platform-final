@@ -50,6 +50,13 @@ export const useCourseStore = defineStore('course', {
       }
     },
     async saveCategoryTree(categoryTree) {
+      const renamedCategories = categoryTree
+        .map(category => ({
+          from: category.originalName?.trim(),
+          to: category.name?.trim(),
+        }))
+        .filter(category => category.from && category.to && category.from !== category.to);
+
       const normalizedTree = categoryTree
         .map(category => ({
           name: category.name?.trim(),
@@ -63,10 +70,31 @@ export const useCourseStore = defineStore('course', {
       this.categories = normalizedTree.map(category => category.name);
 
       const configRef = doc(db, 'config', 'courseSettings');
-      await setDoc(configRef, {
+      const batch = writeBatch(db);
+      batch.set(configRef, {
         categories: this.categories,
         categoryTree: normalizedTree,
       }, { merge: true });
+
+      for (const category of renamedCategories) {
+        const coursesSnapshot = await getDocs(query(
+          collection(db, 'courses'),
+          where('category', '==', category.from)
+        ));
+        coursesSnapshot.forEach((courseDoc) => {
+          batch.update(courseDoc.ref, { category: category.to });
+        });
+        this.courses.forEach((course) => {
+          if (course.category === category.from) {
+            course.category = category.to;
+          }
+        });
+        if (this.currentCourse?.category === category.from) {
+          this.currentCourse.category = category.to;
+        }
+      }
+
+      await batch.commit();
     },
     async fetchAllCourses() {
       const uiStore = useUiStore();
@@ -329,4 +357,3 @@ export const useCourseStore = defineStore('course', {
     }
   }
 })
-

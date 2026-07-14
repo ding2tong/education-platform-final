@@ -113,6 +113,7 @@ onMounted(async () => {
 const resetFromStore = () => {
   editableTree.value = courseStore.categoryTree.map((category, index) => ({
     localId: `${Date.now()}-${index}-${category.name}`,
+    originalName: category.name,
     name: category.name,
     subcategories: [...(category.subcategories || [])],
     newSubcategory: '',
@@ -124,6 +125,7 @@ const resetFromStore = () => {
 const addCategory = () => {
   editableTree.value.push({
     localId: `${Date.now()}-${editableTree.value.length}`,
+    originalName: '',
     name: '',
     subcategories: [],
     newSubcategory: '',
